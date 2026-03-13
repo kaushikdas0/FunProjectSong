@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Make It Work
-status: planning
-stopped_at: Defining requirements
+status: ready_to_plan
+stopped_at: Roadmap created — Phase 3 ready to plan
 last_updated: "2026-03-14"
-last_activity: 2026-03-14 — Milestone v2.0 started
+last_activity: 2026-03-14 — v2.0 roadmap created (3 phases, 11 requirements mapped)
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
-  total_plans: 0
+  total_plans: 6
   completed_plans: 0
   percent: 0
 ---
@@ -21,24 +21,24 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-14)
 
 **Core value:** One tap from name to a downloadable, shareable compliment card that makes anyone smile
-**Current focus:** v2.0 — Make It Work
+**Current focus:** Phase 3 — AI Foundation
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-14 — Milestone v2.0 started
+Phase: 3 of 5 (AI Foundation) — first v2.0 phase
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-03-14 — v2.0 roadmap created, 11/11 requirements mapped
 
-Progress: [░░░░░░░░░░░░░░░░░░░░] 0%
+Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (v2.0)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Timeline: 1 day
+- Total plans completed: 3 (v1.0)
+- Timeline: 1 day (v1.0)
 
-**By Phase:**
+**By Phase (v1.0):**
 
 | Phase | Plans | Tasks | Files |
 |-------|-------|-------|-------|
@@ -50,14 +50,17 @@ Progress: [░░░░░░░░░░░░░░░░░░░░] 0%
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
 Key decisions from v1.0:
-
 - DLS-first: Build and validate the design system before any feature work
 - Self-hosted Caveat font via @fontsource — prevents CORS canvas taint in card export
 - Tailwind v4 CSS-only config — no tailwind.config.js, @theme block only
 - Pixelarticons at 24px multiples only — crisp pixel art rendering
-- Card padding via inline CSS variables — Tailwind v4 doesn't generate custom spacing utilities
+
+Key decisions for v2.0:
+- Firebase AI Logic (firebase/ai) over Genkit — browser-safe, no backend process, API key never in bundle
+- Remote Config for model name — prevents production outage when Gemini model retires (June 1, 2026)
+- Phase state machine in useCompliment hook — idle/generating/result/error, not URL routes
+- GEN-03 (typewriter) mapped to Phase 4 alongside card download — both need the same forwardRef DOM node
 
 ### Pending Todos
 
@@ -65,10 +68,11 @@ None.
 
 ### Blockers/Concerns
 
-None.
+- [Phase 3 prereq]: Firebase project must be created with AI Logic enabled in Firebase console before any code is written
+- [Phase 4 risk]: Self-hosted font on localhost may not embed in html-to-image (GitHub issue #412) — verify on staging URL early, not just localhost
 
 ## Session Continuity
 
 Last session: 2026-03-14
-Stopped at: v1.0 milestone completed
+Stopped at: Roadmap created — ready to plan Phase 3
 Resume file: None

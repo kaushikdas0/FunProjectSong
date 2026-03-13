@@ -51,23 +51,23 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GEN-01 | TBD | Pending |
-| GEN-02 | TBD | Pending |
-| GEN-03 | TBD | Pending |
-| GEN-04 | TBD | Pending |
-| GEN-05 | TBD | Pending |
-| DWNL-01 | TBD | Pending |
-| DWNL-02 | TBD | Pending |
-| DWNL-03 | TBD | Pending |
-| VIZP-01 | TBD | Pending |
-| VIZP-02 | TBD | Pending |
-| VIZP-03 | TBD | Pending |
+| GEN-01 | Phase 3 | Pending |
+| GEN-02 | Phase 3 | Pending |
+| GEN-03 | Phase 4 | Pending |
+| GEN-04 | Phase 3 | Pending |
+| GEN-05 | Phase 3 | Pending |
+| DWNL-01 | Phase 4 | Pending |
+| DWNL-02 | Phase 4 | Pending |
+| DWNL-03 | Phase 4 | Pending |
+| VIZP-01 | Phase 5 | Pending |
+| VIZP-02 | Phase 5 | Pending |
+| VIZP-03 | Phase 5 | Pending |
 
 **Coverage:**
 - v2.0 requirements: 11 total
-- Mapped to phases: 0
-- Unmapped: 11 ⚠️
+- Mapped to phases: 11
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-14*
-*Last updated: 2026-03-14 after initial definition*
+*Last updated: 2026-03-14 after roadmap creation — all 11 requirements mapped*
