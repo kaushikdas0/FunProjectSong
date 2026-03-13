@@ -57,17 +57,17 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DLS-01 | — | Pending |
-| DLS-02 | — | Pending |
-| DLS-03 | — | Pending |
-| DLS-04 | — | Pending |
-| CARD-01 | — | Pending |
+| DLS-01 | Phase 1 | Pending |
+| DLS-02 | Phase 1 | Pending |
+| DLS-03 | Phase 1 | Pending |
+| DLS-04 | Phase 1 | Pending |
+| CARD-01 | Phase 2 | Pending |
 
 **Coverage:**
 - v1 requirements: 5 total
-- Mapped to phases: 0
-- Unmapped: 5 ⚠️
+- Mapped to phases: 5
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-13*
-*Last updated: 2026-03-13 after initial definition*
+*Last updated: 2026-03-13 after roadmap creation*
