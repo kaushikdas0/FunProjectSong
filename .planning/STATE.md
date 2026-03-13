@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 01-design-language-system-01-PLAN.md
-last_updated: "2026-03-13T11:16:55.622Z"
+stopped_at: "Checkpoint: 01-02 Task 2 visual approval — visit http://localhost:5173/kitchen-sink"
+last_updated: "2026-03-13T11:20:40.733Z"
 last_activity: 2026-03-13 — Roadmap created
 progress:
   total_phases: 2
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -51,6 +51,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 01-design-language-system P01 | 3 | 2 tasks | 18 files |
+| Phase 01-design-language-system P02 | 2 | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,8 @@ Recent decisions affecting current work:
 - [Phase 01-design-language-system]: No tailwind.config.js — Tailwind v4 uses only CSS @theme block
 - [Phase 01-design-language-system]: Self-hosted Caveat via @fontsource/caveat — prevents CORS canvas taint in future card export
 - [Phase 01-design-language-system]: Used --legacy-peer-deps for @tailwindcss/vite — Tailwind v4.2.1 peer dep lag with Vite 8 (works correctly)
+- [Phase 01-design-language-system]: Render pixelarticons at 24px/48px only — non-multiples of 24px grid cause sub-pixel blurring
+- [Phase 01-design-language-system]: Kitchen sink /kitchen-sink route tree-shaken from prod via React.lazy + import.meta.env.DEV guard
 
 ### Pending Todos
 
@@ -75,6 +78,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T11:16:55.620Z
-Stopped at: Completed 01-design-language-system-01-PLAN.md
+Last session: 2026-03-13T11:20:40.732Z
+Stopped at: Checkpoint: 01-02 Task 2 visual approval — visit http://localhost:5173/kitchen-sink
 Resume file: None
