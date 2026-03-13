@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EgoBoost 3000</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&amp;family=Plus+Jakarta+Sans:wght@400..700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#FFB3A7",
+                        "secondary": "#9EB1CF",
+                        "background-light": "#FFF5F2",
+                        "background-dark": "#2a1c1a",
+                        "text-main": "#4a3c3a",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"],
+                        "handwritten": ["Caveat", "cursive"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #FFF5F2; /* Soft blush cream */
+        }
+        .decorative-element {
+            position: absolute;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-main dark:text-slate-100 min-h-screen flex justify-center">
+<!-- Mobile Container -->
+<div class="relative w-full max-w-[480px] bg-background-light dark:bg-background-dark min-h-screen flex flex-col overflow-hidden shadow-2xl mx-auto">
+<!-- Decorative Elements (Retro-cute pixel-like charm) -->
+<div class="decorative-element top-12 left-6 text-secondary material-symbols-outlined text-2xl">star</div>
+<div class="decorative-element top-32 right-8 text-primary material-symbols-outlined text-3xl">favorite</div>
+<div class="decorative-element bottom-40 left-10 text-primary material-symbols-outlined text-xl">favorite</div>
+<div class="decorative-element bottom-24 right-12 text-secondary material-symbols-outlined text-2xl">star</div>
+<div class="decorative-element top-1/2 left-4 text-secondary material-symbols-outlined text-lg">star</div>
+<div class="decorative-element top-2/3 right-6 text-primary material-symbols-outlined text-2xl">favorite</div>
+<!-- Top App Bar Area (Simplified for minimalist look) -->
+<div class="flex items-center p-4 pt-8 justify-between z-10">
+<button class="flex size-12 shrink-0 items-center justify-center text-text-main dark:text-slate-100 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-[28px]">menu</span>
+</button>
+<button class="flex size-12 shrink-0 items-center justify-center text-text-main dark:text-slate-100 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-[28px]">settings</span>
+</button>
+</div>
+<!-- Main Content (Centered) -->
+<div class="flex-1 flex flex-col items-center justify-center px-6 pb-20 z-10">
+<!-- Headers -->
+<div class="text-center mb-12">
+<h1 class="font-handwritten text-6xl font-bold tracking-tight text-text-main dark:text-slate-100 mb-2">EgoBoost 3000</h1>
+<p class="font-handwritten text-2xl text-text-main/80 dark:text-slate-300">A warm hug for your favorite people</p>
+</div>
+<!-- Input Area -->
+<div class="w-full max-w-sm mb-8">
+<label class="block w-full">
+<input class="w-full rounded-full border-2 border-secondary bg-white/80 dark:bg-black/20 focus:border-secondary focus:ring-4 focus:ring-secondary/20 h-16 px-6 text-xl font-handwritten placeholder:text-text-main/50 dark:placeholder:text-slate-400 text-center text-text-main dark:text-slate-100 transition-all shadow-sm" placeholder="Type a name..." type="text"/>
+</label>
+</div>
+<!-- CTA Button -->
+<div class="w-full max-w-sm">
+<button class="w-full bg-primary hover:bg-primary/90 text-text-main dark:text-slate-900 rounded-full h-16 px-8 text-3xl font-handwritten font-bold tracking-wide shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">rocket_launch</span>
+                    Boost!
+                </button>
+</div>
+</div>
+</div>
+</body></html>

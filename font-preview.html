@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EgoBoost 3000 — Font Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Indie+Flower&family=Pacifico&family=Satisfy&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FFF0EC;
+    min-height: 100vh;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+
+  h1 {
+    font-family: system-ui;
+    color: #6B5B7B;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 30px;
+    max-width: 1400px;
+    width: 100%;
+  }
+
+  .card-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .font-label {
+    font-family: system-ui;
+    font-size: 13px;
+    color: #8B7BA3;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .font-desc {
+    font-family: system-ui;
+    font-size: 12px;
+    color: #A99BBF;
+    max-width: 300px;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px 36px;
+    box-shadow: 0 4px 24px rgba(107, 91, 123, 0.08);
+    width: 340px;
+    text-align: center;
+    border: 1px solid rgba(158, 177, 207, 0.15);
+  }
+
+  .card .greeting {
+    font-size: 18px;
+    color: #9EB1CF;
+    margin-bottom: 16px;
+  }
+
+  .card .compliment {
+    font-size: 22px;
+    color: #5A4A6F;
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+
+  .card .brand {
+    font-size: 14px;
+    color: #C4A8B0;
+  }
+
+  .card .button-preview {
+    margin-top: 20px;
+    display: inline-block;
+    padding: 12px 28px;
+    background: #E8A598;
+    color: white;
+    border-radius: 12px;
+    font-size: 16px;
+  }
+
+  .card .small-text {
+    margin-top: 14px;
+    font-size: 13px;
+    color: #A99BBF;
+  }
+
+  .caveat * { font-family: 'Caveat', cursive; }
+  .pacifico * { font-family: 'Pacifico', cursive; }
+  .satisfy * { font-family: 'Satisfy', cursive; }
+  .indie * { font-family: 'Indie Flower', cursive; }
+
+  .section-title {
+    font-family: system-ui;
+    color: #6B5B7B;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-top: 30px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(158, 177, 207, 0.2);
+    width: 100%;
+    max-width: 1400px;
+  }
+</style>
+</head>
+<body>
+
+<h1>EgoBoost 3000 — Pick Your Font</h1>
+<p style="font-family: system-ui; color: #A99BBF; font-size: 14px; text-align: center; max-width: 600px;">
+  Each card shows the same compliment in a different handwritten font.<br>
+  Background: blush cream &bull; Text: periwinkle tones &bull; Button: soft coral
+</p>
+
+<div class="grid">
+
+  <div class="card-wrapper">
+    <span class="font-label">Caveat</span>
+    <div class="card caveat">
+      <div class="greeting">Dear Sarah,</div>
+      <div class="compliment">You are so magnificently brilliant that even the sun checks its brightness settings when you walk by.</div>
+      <div class="brand">~ EgoBoost 3000 ~</div>
+      <div class="button-preview">Boost Me Again</div>
+      <div class="small-text">Type your name. Get boosted.</div>
+    </div>
+    <span class="font-desc">Casual, like a friend's sticky note. Very readable at all sizes. Most popular handwritten Google Font.</span>
+  </div>
+
+  <div class="card-wrapper">
+    <span class="font-label">Pacifico</span>
+    <div class="card pacifico">
+      <div class="greeting">Dear Sarah,</div>
+      <div class="compliment">You are so magnificently brilliant that even the sun checks its brightness settings when you walk by.</div>
+      <div class="brand">~ EgoBoost 3000 ~</div>
+      <div class="button-preview">Boost Me Again</div>
+      <div class="small-text">Type your name. Get boosted.</div>
+    </div>
+    <span class="font-desc">Flowing brush script. Retro diner/surfboard energy. Bold and connected — harder to read in paragraphs.</span>
+  </div>
+
+  <div class="card-wrapper">
+    <span class="font-label">Satisfy</span>
+    <div class="card satisfy">
+      <div class="greeting">Dear Sarah,</div>
+      <div class="compliment">You are so magnificently brilliant that even the sun checks its brightness settings when you walk by.</div>
+      <div class="brand">~ EgoBoost 3000 ~</div>
+      <div class="button-preview">Boost Me Again</div>
+      <div class="small-text">Type your name. Get boosted.</div>
+    </div>
+    <span class="font-desc">Elegant thin cursive. More "love letter" than "fun app." Refined and formal.</span>
+  </div>
+
+  <div class="card-wrapper">
+    <span class="font-label">Indie Flower</span>
+    <div class="card indie">
+      <div class="greeting">Dear Sarah,</div>
+      <div class="compliment">You are so magnificently brilliant that even the sun checks its brightness settings when you walk by.</div>
+      <div class="brand">~ EgoBoost 3000 ~</div>
+      <div class="button-preview">Boost Me Again</div>
+      <div class="small-text">Type your name. Get boosted.</div>
+    </div>
+    <span class="font-desc">Playful notebook doodle. Light, bouncy, childlike. Great for silly/fun tone.</span>
+  </div>
+
+</div>
+
+</body>
+</html>
