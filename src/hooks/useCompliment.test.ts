@@ -64,7 +64,7 @@ describe('useCompliment hook', () => {
   it('calling generate() when already generating is a no-op (debounce)', async () => {
     const { result } = renderHook(() => useCompliment());
 
-    // Create a slow generate that we can interrupt
+    // Create a slow generate that we can control
     let resolveGenerate!: (val: unknown) => void;
     mockGenerateContent.mockReturnValueOnce(
       new Promise((resolve) => {
@@ -72,32 +72,33 @@ describe('useCompliment hook', () => {
       })
     );
 
-    // Start first generate (doesn't await yet)
+    // Start first generate without awaiting — Alice is now in-flight
     let firstGeneratePromise: Promise<void>;
     act(() => {
       firstGeneratePromise = result.current.generate('Alice');
     });
 
-    // Immediately try to call generate again — should be no-op due to isFlyingRef
-    await act(async () => {
-      await result.current.generate('Bob');
+    // Bob's generate fires while Alice is still in-flight — isFlyingRef blocks it
+    // Bob's call returns immediately (no-op), doesn't change state, doesn't call API
+    act(() => {
+      result.current.generate('Bob');
     });
 
-    // Verify still only one call (second was blocked by debounce)
-    expect(mockGenerateContent).toHaveBeenCalledTimes(0); // blocked before generateContent
-
-    // Resolve the first in-flight request
+    // Now resolve Alice's in-flight request
     await act(async () => {
       resolveGenerate({ response: { text: () => 'Alice compliment' } });
       await firstGeneratePromise!;
     });
 
-    // Result should be Alice, not Bob
+    // Final state must be Alice's result — Bob was blocked by debounce
     expect(result.current.state).toEqual({
       status: 'result',
       name: 'Alice',
       compliment: 'Alice compliment',
     });
+
+    // generateContent called exactly once (Alice only; Bob was never executed)
+    expect(mockGenerateContent).toHaveBeenCalledTimes(1);
   });
 
   it('when generateContent throws, state transitions to { status: "error" }', async () => {
