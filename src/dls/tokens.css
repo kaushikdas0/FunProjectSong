@@ -1,0 +1,45 @@
+@theme {
+  /* Primary blue (periwinkle) */
+  --color-blue-50:  #F3F6FB;
+  --color-blue-100: #E6EDF6;
+  --color-blue-200: #CCDAED;
+  --color-blue-300: #B3C8E4;
+  --color-blue-400: #9EB1CF;
+  --color-blue-500: #7A97BE;
+  --color-blue-600: #5B7CAC;
+  --color-blue-700: #3D5A8A;
+
+  /* Background/base (blush cream) */
+  --color-cream-50:  #FFFCFA;
+  --color-cream-100: #FFF8F5;
+  --color-cream-200: #FFF4EF;
+  --color-cream-300: #FFF0EC;
+  --color-cream-400: #F8E8E2;
+  --color-cream-500: #F0DDD6;
+
+  /* Accent coral (buttons, CTAs) */
+  --color-coral-300: #F5C4BA;
+  --color-coral-400: #EEB4A8;
+  --color-coral-500: #E8A598;
+  --color-coral-600: #D98A7A;
+  --color-coral-700: #C06E5E;
+
+  /* Text colors */
+  --color-text-primary:   #5A4A6F;
+  --color-text-secondary: #8B7BA3;
+  --color-text-muted:     #A99BBF;
+  --color-text-light:     #C4A8B0;
+
+  /* Typography */
+  --font-caveat: 'Caveat', cursive;
+
+  /* Border radii */
+  --radius-card:   20px;
+  --radius-button: 12px;
+  --radius-input:  10px;
+  --radius-swatch:  8px;
+
+  /* Spacing (DLS-specific) */
+  --spacing-card-pad-x: 36px;
+  --spacing-card-pad-y: 40px;
+}
