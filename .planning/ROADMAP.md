@@ -29,8 +29,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 01-01-PLAN.md — Scaffold Vite project, install dependencies, create DLS token system and typography
-- [ ] 01-02-PLAN.md — Build Icon component, kitchen sink screen, dev-only routing, visual approval
+- [x] 01-01-PLAN.md — Scaffold Vite project, install dependencies, create DLS token system and typography
+- [x] 01-02-PLAN.md — Build Icon component, kitchen sink screen, dev-only routing, visual approval
 
 ### Phase 2: Card Component
 **Goal**: A styled compliment card component exists that uses only DLS tokens, renders correctly on screen, and is ready to receive a name and compliment as props
@@ -40,7 +40,10 @@ Plans:
   1. The card component renders with the calm/cozy aesthetic — soft blues, cream background, handwritten font — pulling all styles from DLS tokens (no hardcoded values)
   2. The card displays a placeholder name and compliment text that is visually readable and formatted as a card artifact (not a plain text block)
   3. The card component appears on the kitchen sink screen alongside other DLS components, confirming visual consistency
-**Plans**: TBD
+**Plans:** 1 plan
+
+Plans:
+- [ ] 02-01-PLAN.md — Build ComplimentCard component with greeting card aesthetic, add to kitchen sink for visual approval
 
 ## Progress
 
@@ -50,4 +53,4 @@ Phases execute in numeric order: 1 → 2
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Design Language System | 2/2 | Complete   | 2026-03-13 |
-| 2. Card Component | 0/TBD | Not started | - |
+| 2. Card Component | 0/1 | Not started | - |
