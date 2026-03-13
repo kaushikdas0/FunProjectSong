@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Make It Work
-status: in-progress
-stopped_at: "Phase 03 Plan 01 complete — useCompliment hook, Firebase singleton, Vitest configured"
-last_updated: "2026-03-14T17:36:00.000Z"
-last_activity: 2026-03-14 — Phase 3 Plan 01 executed, 6/6 tests passing
+status: executing
+stopped_at: Completed 03-02-PLAN.md — Phase 3 AI Foundation fully complete
+last_updated: "2026-03-13T17:52:02.352Z"
+last_activity: "2026-03-14 — Plan 03-01 executed: Firebase singleton + useCompliment hook (6 tests passing)"
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 1
-  completed_plans: 1
+  completed_phases: 1
+  total_plans: 2
+  completed_plans: 2
   percent: 33
 ---
 
@@ -51,6 +51,7 @@ Progress: [██████░░░░░░░░░░░░░░] 33% (v2
 | Phase | Plans | Tasks | Files | Duration |
 |-------|-------|-------|-------|----------|
 | 03-ai-foundation P01 | 1 | 2 | 7 | ~15 min |
+| Phase 03-ai-foundation P02 | 30 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,8 @@ Key decisions for v2.0:
 - GEN-03 (typewriter) mapped to Phase 4 alongside card download — both need the same forwardRef DOM node
 - vitest --legacy-peer-deps required: @tailwindcss/vite@4.2.1 false peer dep conflict with vite 8; vitest 4.1.0 supports vite 8 correctly
 - createModel synchronous: getGenerativeModel is cheap; Remote Config fetch stays in getModelName separately
+- [Phase 03-ai-foundation]: maxOutputTokens increased to 1024 — default 120 truncated compliments mid-sentence; discovered during human-verify
+- [Phase 03-ai-foundation]: Background decorative icons shipped in Plan 02 (not Phase 5) — pixelarticons already installed, low-cost addition during MainScreen fix pass
 
 ### Pending Todos
 
@@ -81,6 +84,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T17:36:00.000Z
-Stopped at: Completed Phase 03 Plan 01 — useCompliment hook, Firebase singleton, Vitest configured
-Resume file: .planning/phases/03-ai-foundation/03-02-PLAN.md (next plan)
+Last session: 2026-03-13T17:52:02.350Z
+Stopped at: Completed 03-02-PLAN.md — Phase 3 AI Foundation fully complete
+Resume file: None
