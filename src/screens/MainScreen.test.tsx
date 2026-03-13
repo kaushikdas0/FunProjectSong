@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock useCompliment hook — we control state and generate function
@@ -27,7 +28,7 @@ describe('MainScreen', () => {
   });
 
   it('renders input with auto-focus and playful placeholder text', () => {
-    render(<MainScreen />);
+    render(<MemoryRouter><MainScreen /></MemoryRouter>);
     const input = screen.getByRole('textbox');
     expect(input).toBeInTheDocument();
     expect(input).toHaveFocus();
@@ -38,7 +39,7 @@ describe('MainScreen', () => {
   });
 
   it('"Boost Me" button is disabled when input has fewer than 3 characters', () => {
-    render(<MainScreen />);
+    render(<MemoryRouter><MainScreen /></MemoryRouter>);
     const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: 'Al' } });
     const button = screen.getByRole('button', { name: /boost me/i });
@@ -46,7 +47,7 @@ describe('MainScreen', () => {
   });
 
   it('"Boost Me" button is enabled when input has 3+ characters', () => {
-    render(<MainScreen />);
+    render(<MemoryRouter><MainScreen /></MemoryRouter>);
     const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: 'Ali' } });
     const button = screen.getByRole('button', { name: /boost me/i });
@@ -58,7 +59,7 @@ describe('MainScreen', () => {
       state: { status: 'generating' },
       generate: mockGenerate,
     });
-    render(<MainScreen />);
+    render(<MemoryRouter><MainScreen /></MemoryRouter>);
     const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: 'Ali' } });
     const button = screen.getByRole('button', { name: /boosting/i });
@@ -70,7 +71,7 @@ describe('MainScreen', () => {
       state: { status: 'result', name: 'Ali', compliment: 'You are magnificent!' },
       generate: mockGenerate,
     });
-    render(<MainScreen />);
+    render(<MemoryRouter><MainScreen /></MemoryRouter>);
     const button = screen.getByRole('button', { name: /boost again/i });
     expect(button).toBeInTheDocument();
   });
@@ -80,7 +81,7 @@ describe('MainScreen', () => {
       state: { status: 'error' },
       generate: mockGenerate,
     });
-    render(<MainScreen />);
+    render(<MemoryRouter><MainScreen /></MemoryRouter>);
     // Should show a friendly message — not "Error" or raw error codes
     const tryAgainButton = screen.getByRole('button', { name: /try again/i });
     expect(tryAgainButton).toBeInTheDocument();
@@ -95,7 +96,7 @@ describe('MainScreen', () => {
       state: { status: 'result', name: 'Ali', compliment: 'You are the universe\'s finest creation!' },
       generate: mockGenerate,
     });
-    render(<MainScreen />);
+    render(<MemoryRouter><MainScreen /></MemoryRouter>);
     // Card should show the name and compliment
     expect(screen.getByText('Ali')).toBeInTheDocument();
     expect(screen.getByText("You are the universe's finest creation!")).toBeInTheDocument();

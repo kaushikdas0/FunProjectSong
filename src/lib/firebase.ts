@@ -42,7 +42,7 @@ Never make specific assumptions about their traits (smart, funny, athletic).
 Keep it universal — every compliment works for any human alive.`,
     generationConfig: {
       temperature: 1.4,
-      maxOutputTokens: 120,
+      maxOutputTokens: 1024,
     },
   });
 }
