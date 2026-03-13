@@ -2,178 +2,205 @@
 
 **Project:** EgoBoost 3000
 **Domain:** AI-powered compliment card generator (React + Firebase + Gemini Flash web app)
-**Researched:** 2026-03-13
-**Confidence:** HIGH (core stack and architecture from official sources), MEDIUM (competitor feature landscape)
+**Researched:** 2026-03-14 (v2.0 milestone update)
+**Confidence:** HIGH
 
 ## Executive Summary
 
-EgoBoost 3000 is a stateless, client-rendered single-page application that takes a name, calls Gemini Flash via Firebase AI Logic, and delivers an absurdly dramatic AI-written compliment framed inside a downloadable styled card image. The correct architectural pattern is direct client-to-Firebase AI Logic SDK calls — no Cloud Functions needed. The Firebase proxy keeps the Gemini API key server-side, and the entire UI state lives in a single `useCompliment` hook with four fields. This is intentionally a small, focused product; the temptation to add scope (auth, history, multiple styles, photo upload) should be resisted explicitly.
+EgoBoost 3000 v2.0 is a stateless, browser-based app that takes a name, generates a single absurdly dramatic compliment via Gemini Flash, and delivers the result as a styled downloadable card. The existing v1.0 foundation (Vite 8, React 19, TypeScript, Tailwind v4, Caveat font, pixelarticons, ComplimentCard component, DLS) is solid and validated. The v2.0 work is additive: wire AI generation, card download, typewriter animation, and an animated background — all without adding significant new dependencies or new routes. Only 4 new files and 2 modified files are required across the entire codebase.
 
-The core differentiator — and the feature that requires the most care to build correctly — is the downloadable styled card. No competitor in the compliment generator space offers a designed, downloadable card artifact. This means the Design Language System (DLS) must be built first, before any feature work, because the card's visual quality is the product. The download mechanism (html-to-image capturing a ref-forwarded React component) has well-known font and CORS failure modes that are invisible in development and visible in production. These must be treated as exit criteria, not polish.
+The recommended architecture uses the Firebase AI Logic client SDK (`firebase/ai`) to call Gemini Flash directly from the browser through a Firebase-managed proxy. This eliminates the need for any custom backend server or Cloud Functions. The Gemini API key never enters the browser bundle; Firebase infrastructure holds it. This is the cleanest path to working AI generation: no CORS configuration, no local Node.js process to run alongside Vite, no deployment complexity. Phase state transitions (`idle → generating → result → error`) live in a `useCompliment` hook as a local state machine — not URL routes — because intermediate states are not navigable and should not be deep-linkable.
 
-The top risk is building fast and breaking on the details: hardcoded model names that cause outages when Google deprecates them, card downloads that silently render the wrong font, prompt injection through the name field, and CORS tainting that makes the download button appear broken on production domains. All six critical pitfalls identified in research map to Phase 1 or Phase 2 — none are later-stage concerns. The mitigation pattern is consistent: establish the correct pattern at the start (Remote Config for model name, `document.fonts.ready` await before capture, XML-delimited prompt structure) rather than retrofitting after the first incident.
+The biggest risks are concentrated in two areas. First, the card download pipeline: font rendering failures in exported PNGs are silent and invisible in development but broken in production, and Retina displays will receive blurry cards if pixel ratio is not explicitly set. Second, AI integration foundations: hardcoding the model name causes a production outage on June 1, 2026 (11 weeks away), and prompt injection via the name field is the top-ranked LLM vulnerability. Both categories are straightforward to prevent when addressed at the start of implementation — all critical pitfalls map to Phase 1 or Phase 2.
+
+---
 
 ## Key Findings
 
 ### Recommended Stack
 
-The stack is a tight, modern pairing with no ambiguity: React 19 + Vite 8 + TypeScript scaffolded via `npm create vite@latest`, Firebase JS SDK 12.10.0 (which includes `firebase/ai` for Gemini access), and Tailwind CSS v4 via the `@tailwindcss/vite` plugin. Tailwind v4 requires zero config file — just `@import "tailwindcss"` in the CSS entry — which suits the DLS-first approach well. The single non-obvious choice is `html-to-image` over `html2canvas` for card export: html-to-image has better active maintenance, better font handling via SVG foreignObject, and cleaner React integration via `forwardRef`.
+The existing stack requires no changes. Five targeted additions are needed for v2.0:
 
-**Core technologies:**
-- React 19 + Vite 8 + TypeScript: UI and build — the standard 2026 SPA starting point with first-class Firebase integration guides
-- Firebase JS SDK 12.10.0 (`firebase/ai`): Gemini Flash proxy — keeps the API key server-side without a custom Cloud Function
-- Tailwind CSS v4 (`@tailwindcss/vite`): Styling — zero-config, utility-first, DLS tokens map cleanly to utility classes
-- html-to-image 1.11.13: Card PNG export — better font handling than html2canvas, actively maintained
-- lucide-react 0.577.0: Icons — tree-shakeable, React-first, fits the "slightly retro techy" aesthetic
-- Firebase Remote Config: Model name management — prevents production outage when Google deprecates a model
+**New dependencies:**
+- `firebase` (firebase/ai SDK) — client-side Gemini access via Firebase proxy; no custom server required; API key never in browser bundle
+- `html-to-image@1.11.13` — DOM-to-PNG capture for card download; maintained fork of html2canvas with better font/CSS support
+- Firebase Remote Config — remote model name management; prevents production outage when Google deprecates a model
+- Tailwind v4 `@theme` custom `@keyframes` — background icon animation using GPU-composited properties; zero new library overhead
+
+**Important architecture note — Genkit vs Firebase AI Logic:** The STACK.md researcher documented Genkit with a local Express server as the AI approach. The ARCHITECTURE.md researcher independently reached a different conclusion after reading official Firebase docs: use Firebase AI Logic (`firebase/ai`) instead. The ARCHITECTURE.md conclusion is correct and takes precedence. Firebase AI Logic is a browser-safe SDK; Genkit requires a Node.js backend process that contradicts the project's "no Cloud Functions" constraint. The `tsx` and `concurrently` devDependencies documented in STACK.md are not needed.
 
 ### Expected Features
 
-The MVP is fully defined and tightly scoped. The hardest feature to build correctly (card download) is also the core differentiator — it must be in v1, not deferred. No competitor offers a designed downloadable card; that gap is the entire product identity.
+**Must have — v2.0 launch (P1):**
+- AI generation via Firebase AI Logic + Gemini Flash — the entire product depends on this
+- Streaming typewriter display — reduces perceived latency; signals generation progress; comes free when using `generateContentStream` without a separate animation library
+- Error states with friendly messages — especially 429 quota errors (tightened December 2025); never show raw API errors
+- Regenerate button — single-shot generation is too limiting; users need to explore results
+- Download card as PNG — the core product differentiator; no competitor offers a designed downloadable card
+- Mobile-responsive single-column layout — fun/casual web traffic skews heavily mobile
 
-**Must have (table stakes):**
-- Name input + Generate button — entry point; generate must be disabled until name is non-empty
-- AI compliment output via Gemini Flash — the payoff; must feel dramatic and personalized
-- Loading state with typewriter animation — streaming preferred; prevents perceived brokenness during 1-3s generation
-- Error state with retry and specific messages — 429 quota, network error, and generic failure need distinct friendly messages
-- Regenerate button — single-shot is too limiting; overwrite model (not branching)
-- Styled card component — DLS-first; the card IS the download artifact, built together not separately
-- Download card as PNG — core differentiator; uses html-to-image + forwardRef; requires font-load await and CORS validation
+**Should have — v2.0 if time allows (P2):**
+- Animated background icons (pixelarticons with CSS float/pulse) — reinforces app personality; CSS-only, no new library, low effort
 
-**Should have (competitive):**
-- Typewriter/animated compliment reveal — differentiates from static competitors; medium effort, high delight
-- Kitchen sink DLS validation screen — dev-only route; mandatory for visual consistency between screen and card export
-- Mobile-responsive layout — majority of casual web traffic is mobile; single-column on small viewports
+**Defer to v2.x:**
+- Copy compliment text to clipboard — dilutes card-first identity; add only if analytics demand it
+- Subtle card entrance animation on result reveal — low effort, high delight
+- `prefers-reduced-motion` support for background animations — accessibility improvement, two-line addition
 
-**Defer (v2+):**
-- User accounts and history — requires auth + storage stack, massively increases scope; stateless is a feature
-- Multiple compliment styles/vibes — single dramatic voice IS the brand identity; picker adds friction before the payoff
-- Photo upload personalization — content moderation pipeline, unproven value; name-based is sufficient
-- Social sharing buttons — platform APIs change; downloaded image is universally shareable already
-- Multiple language support — dramatic English register does not translate cleanly; English-first until validated
+**Defer to v3+:**
+- Multiple compliment styles/voices — single dramatic voice IS the brand identity; picker adds friction before the payoff
+- User history/saved compliments — requires auth and storage, massively expands scope; stateless design is a feature
+- Shareable card URLs — requires storage and URL-based rendering infrastructure
+
+**Confirmed anti-features (do not build):**
+- Style/vibe picker — adds decision friction before the payoff
+- Social sharing buttons — platform API churn; downloaded image is universally shareable already
+- User accounts — stateless design is intentional
 
 ### Architecture Approach
 
-The architecture is a single-page client application with one-way data flow and no global state store. Four local state fields (`name`, `compliment`, `loading`, `error`) live in a `useCompliment` hook. Components are stateless renderers consuming props and DLS tokens. The Firebase AI Logic SDK is initialized as a singleton in `firebase/ai.ts` and imported where needed. The card component uses `forwardRef` so the same DOM node renders on screen and is captured to PNG — one rendering path, not two. The folder structure follows feature-first organization with a hard separation between the DLS layer (built first) and the feature layer (built after DLS is validated on the kitchen sink screen).
+The app uses a flat, single-screen architecture. `MainScreen` owns a `phase` state machine (`idle → generating → result → error`) — not React Router routes. The URL stays `/` throughout; intermediate states are not navigable or deep-linkable. A `useCompliment` custom hook encapsulates all AI logic and phase transitions. `ComplimentCard` remains a pure renderer with one modification: `forwardRef` added so `html-to-image` can capture its root div. `AnimatedIconBackground` is a new fixed-position component using the existing `Icon` primitive, positioned behind the card with `pointer-events: none` and excluded from card capture.
 
 **Major components:**
-1. DLS Layer (`src/dls/`) — CSS custom properties for tokens/typography/color; built and validated first; everything downstream depends on it
-2. Firebase AI Logic singleton (`src/firebase/ai.ts`) — one initialization point; includes Remote Config for model name; tested in isolation before any UI
-3. `useCompliment` hook — owns all AI call logic and state; no UI coupling; testable independently
-4. `ComplimentCard` component — pure renderer with `forwardRef`; styled entirely from DLS tokens; identical on-screen and in PNG export
-5. `downloadCard` utility — scoped html-to-image capture with `document.fonts.ready` await and `pixelRatio: 2` for retina output
-6. `KitchenSinkScreen` — dev-only route that validates every DLS token, font, and component variant before feature build begins
+1. `firebase/ai.ts` — Firebase app init and singleton model instance; one initialization point for the entire app
+2. `useCompliment` hook — phase state machine, Firebase AI Logic call, streaming iteration, error handling
+3. `MainScreen` (replaced) — composes all UI; the only stateful screen component; unchanged routing
+4. `ComplimentCard` (modified) — pure renderer with `forwardRef` for PNG capture; same props, minimal change
+5. `utils/downloadCard.ts` — isolated `html-to-image` capture logic with full font safety pipeline
+6. `AnimatedIconBackground` (new) — CSS-animated decorative layer using existing Icon component
+
+**New files:** `firebase/ai.ts`, `hooks/useCompliment.ts`, `utils/downloadCard.ts`, `components/AnimatedIconBackground/AnimatedIconBackground.tsx`
+**Modified files:** `ComplimentCard.tsx` (add forwardRef), `MainScreen.tsx` (replace placeholder)
+**Unchanged:** `App.tsx`, `main.tsx`, DLS, Icon component, all existing routes
 
 ### Critical Pitfalls
 
-1. **Hardcoded Gemini model name causes production outage** — `gemini-2.0-flash` retires June 1, 2026. Store the model name in Firebase Remote Config with a real-time listener from day one; never use a string literal in source code.
+1. **Hardcoded Gemini model name causes production outage** — `gemini-2.0-flash` retires June 1, 2026 (11 weeks from today). Store the model name in Firebase Remote Config with a real-time listener from day one. Never use a string literal in source code. Recovery requires a code change + deploy cycle while the app is broken.
 
-2. **Card download renders wrong font silently** — html-to-image captures a DOM clone; if the handwritten font hasn't finished loading, the canvas falls back to system sans-serif with no error. Always `await document.fonts.ready` before the capture call; prefer self-hosting fonts over Google Fonts CDN to avoid the async load race.
+2. **Canvas silently falls back to system font on card download** — html-to-image captures a DOM clone; if the custom font has not finished loading, the canvas renders system sans-serif with no error. Fix: always `await document.fonts.ready` before calling `toPng()`, and pass `getFontEmbedCSS(node)` result to `toPng()` options to pre-embed the font. Invisible in development; broken on production.
 
-3. **CORS canvas taint makes download silently fail on production** — external font or image URLs in the card component cause `SecurityError: canvas tainted` on non-localhost origins. Self-host all card assets; test the download end-to-end on a deployed staging URL before calling Phase 2 complete.
+3. **API key exposed in browser bundle** — if `VITE_GEMINI_API_KEY` is used in a `.env` file, the key lands in the compiled bundle. Firebase AI Logic solves this architecturally: the Firebase project config (safe in client) is not the Gemini API key (never in client). February 2026 security research found ~3,000 previously "harmless" keys now expose Gemini endpoints.
 
-4. **Prompt injection via name field** — raw user input interpolated into the prompt string allows instruction override (OWASP LLM01:2025). Wrap the name in XML delimiters in the prompt (`<user_name>Alex</user_name>`), add a system instruction treating it as data-only, and validate input to alphanumeric + limited punctuation, 50 chars max.
+4. **Blurry card on Retina/HiDPI displays** — `html-to-image` defaults to 1x pixel ratio. Pass `pixelRatio: Math.max(window.devicePixelRatio, 2)` to `toPng()`. One-line fix; discovering it post-launch means re-testing all download flows and re-deploying.
 
-5. **429 rate limit errors surface as cryptic failures** — generic catch blocks make quota errors indistinguishable from network errors. Catch 429 explicitly and show a friendly message ("Too popular right now — try again in a moment"). Debounce the Generate button during active generation to prevent spam-clicking.
+5. **Animation jank on mobile** — animating `box-shadow`, `border-width`, or `background-color` in `@keyframes` triggers paint on every frame. Animate only `transform` and `opacity` (GPU-composited, no layout/paint). Wrap all background animations in `@media (prefers-reduced-motion: no-preference)`. Test on a real mid-range Android device, not Chrome DevTools emulation.
 
-6. **Firebase Functions cold start (if Cloud Functions are ever used)** — 5-20 second first-request latency when no warm instance exists. This project correctly avoids Cloud Functions for AI calls (Firebase AI Logic client SDK handles it), but if any Cloud Function is added later, set `minInstances: 1`.
+6. **Prompt injection via name field** — raw user input interpolated directly into a prompt string is OWASP LLM01:2025, present in 73% of audited production AI deployments. Wrap user input in XML delimiters (`<user_name>Alex</user_name>`); add a system instruction treating the content as a name only; validate to alphanumeric + limited punctuation, 50-char max.
+
+---
 
 ## Implications for Roadmap
 
-Based on the dependency graph established across all four research files, three phases are appropriate. The architecture's build order is explicit: DLS before UI, Firebase before hooks, hooks before components, components before screens. The pitfall map aligns Phase 1 with all AI integration risks and Phase 2 with all card export risks — grouping prevention with implementation.
+Based on the dependency graph in ARCHITECTURE.md, features must be built bottom-up. Firebase AI Logic setup is a hard prerequisite for everything else. Card download and typewriter animation can be developed in parallel once the card renders with real AI data. Background animation is fully independent of AI logic.
 
-### Phase 1: Foundation and AI Integration
+### Phase 1: AI Foundation
 
-**Rationale:** The DLS and Firebase AI Logic setup are hard dependencies for every other phase. Pitfalls 1, 4, 5, and 6 all apply to the AI integration layer and must be addressed here, not retrofitted. Building and validating the kitchen sink screen before feature work prevents visual drift between the on-screen card and the downloaded card.
+**Rationale:** Nothing else works without a functioning Gemini integration. All architecture decisions made in this phase are load-bearing and difficult to retrofit: which SDK to use, where the API key lives, how the prompt is structured, how errors are handled. Four of the six critical pitfalls (model deprecation, API key exposure, prompt injection, 429 handling) must be addressed here before any UI work begins.
 
-**Delivers:** Working Firebase project, Remote Config wired for model name, `useCompliment` hook returning real Gemini completions, kitchen sink screen validating all DLS tokens and fonts, input validation and prompt injection protection in place, 429 and error handling wired.
+**Delivers:** Working Firebase project setup, Remote Config wired for model name, `useCompliment` hook returning real Gemini completions with streaming, full phase state machine (`idle → generating → result → error`), input validation, prompt injection protection, friendly 429 and network error messages, generate button debounce.
 
-**Addresses features:** DLS/kitchen sink screen, name input + generate button, AI compliment output, loading state, error state with specific messages.
+**Addresses features:** AI generation (P1), streaming output pipeline (P1), error states with specific messages (P1), regenerate button (P1)
 
-**Avoids pitfalls:** Hardcoded model name (Remote Config from day one), prompt injection (XML-delimited prompt structure from first implementation), 429 errors (explicit catch in initial error handler), cold start (client SDK, no Cloud Functions).
+**Avoids pitfalls:** Hardcoded model name (Remote Config from day one), API key exposure (Firebase AI Logic architecture — no `VITE_` prefix), prompt injection (XML-delimited prompt structure from first implementation), 429 errors (explicit catch with friendly message), CORS issues (Firebase AI Logic proxy eliminates cross-origin entirely)
 
-**Research flag:** Standard patterns — Firebase AI Logic is well-documented with official guides. No additional research phase needed.
+**Research flag:** Standard patterns — Firebase AI Logic has official get-started docs (HIGH confidence). Remote Config integration is documented with code samples. No research phase needed.
 
-### Phase 2: Card Component and Download
+### Phase 2: Card Generation and Download
 
-**Rationale:** The card component and download feature are tightly coupled — they must be built together using the same `forwardRef` pattern. Building them separately is the anti-pattern that causes two-path rendering drift. Pitfalls 2 and 3 (font fallback, CORS canvas taint) both live here and both require production-domain verification as exit criteria, not dev-only testing.
+**Rationale:** Card download is the core product differentiator — no competitor offers it. It depends on ComplimentCard rendering with real AI content, so Phase 1 must complete first. The font pipeline is the most technically fragile element in the entire app and must be treated as a success criterion for this phase, not a polish item. Font correctness must be verified on a deployed staging URL, not just localhost (CORS behavior differs).
 
-**Delivers:** `ComplimentCard` component styled with DLS tokens, `downloadCard` utility with `document.fonts.ready` await and `pixelRatio: 2`, end-to-end download verified on a deployed staging URL (not localhost), regenerate button, mobile-responsive layout.
+**Delivers:** Fully functional card experience — streaming typewriter display on ComplimentCard, download as 2x Retina-quality PNG with correct Caveat font, `forwardRef` on ComplimentCard, `downloadCard` utility with full font safety pipeline, typewriter accessibility (aria-hidden + sr-only).
 
-**Addresses features:** Styled card component, download card as PNG, regenerate button, mobile layout.
+**Addresses features:** Typewriter display (P1), download card as PNG (P1)
 
-**Avoids pitfalls:** Canvas font fallback (`document.fonts.ready` await, self-hosted or CORS-verified fonts), CORS canvas taint (staging deployment test as phase exit criterion), silent download failure (error toast on capture failure).
+**Implements:** `forwardRef` on ComplimentCard, `utils/downloadCard.ts`, `TypewriterText` display wrapper
 
-**Research flag:** Moderate risk — font loading and CORS behavior have known edge cases. The "Looks Done But Isn't" checklist from PITFALLS.md should be used as the phase exit checklist verbatim.
+**Avoids pitfalls:** Font fallback on export (`document.fonts.ready` + `getFontEmbedCSS`), blurry Retina card (`pixelRatio: 2`), canvas CORS taint (staging deployment test as phase exit criterion), typewriter accessibility (aria-hidden + sr-only pattern — two lines, no logic change)
 
-### Phase 3: Polish and Production Readiness
+**Research flag:** The font pipeline has well-documented workarounds confirmed in multiple GitHub issue threads. Standard patterns — follow FEATURES.md and ARCHITECTURE.md exactly. No research phase needed, but the "Looks Done But Isn't" checklist from PITFALLS.md should be used verbatim as the phase exit checklist.
 
-**Rationale:** Once core functionality is proven on a deployed staging environment, the remaining work is production hardening and delight features. Firebase App Check (reCAPTCHA v3) must be in place before any public URL is shared. Typewriter animation and card reveal polish are medium-effort, high-delight additions that are safe to defer until the core is solid.
+### Phase 3: Animated Background and Mobile Layout
 
-**Delivers:** Firebase App Check enabled, typewriter animation on compliment reveal, Firebase Hosting production deployment with verified end-to-end flow, final smoke tests (cold start, download on production domain, 429 path).
+**Rationale:** `AnimatedIconBackground` has zero dependencies on AI logic or card download — it only requires the existing `Icon` component and DLS tokens (both v1.0 complete). This makes it the most self-contained work in v2.0. Mobile layout correctness with real device keyboard testing also belongs here, since the background's positioning behavior is the most likely source of mobile layout bugs.
 
-**Addresses features:** Typewriter animation on reveal, App Check (security), production deployment.
+**Delivers:** Polished visual experience — floating pixelarticons with CSS pulse animation, responsive single-column layout verified on real mobile devices, `prefers-reduced-motion` support, `pointer-events: none` on background layer.
 
-**Avoids pitfalls:** Bot abuse of the Gemini endpoint (App Check), any latency or correctness regressions caught by production smoke tests.
+**Addresses features:** Animated background icons (P2), mobile-responsive layout (P1)
 
-**Research flag:** Standard patterns — Firebase App Check setup is documented with a straightforward reCAPTCHA v3 integration. No additional research phase needed.
+**Avoids pitfalls:** Animation jank (`transform`/`opacity` only, staggered `animation-delay`, `will-change` sparingly), mobile fixed position + keyboard (`position: absolute` in `100dvh` container, test on real iPhone), missing `prefers-reduced-motion` media query (wrap all background animations)
+
+**Research flag:** Standard patterns. CSS `@keyframes` with Tailwind v4 `@theme` is well-documented. No research phase needed. Requires real device testing (not DevTools emulation) as a phase exit criterion.
 
 ### Phase Ordering Rationale
 
-- DLS before features: the card download quality (the product's differentiator) depends entirely on CSS tokens being correct and stable before the card component is built. Post-hoc DLS refactors show up as visual drift in the downloaded PNG.
-- Firebase + hook before UI: isolating `useCompliment` as a testable unit before wiring it to components means AI integration bugs are caught without UI noise.
-- Card component and download in the same phase: these are the same artifact. Building them in different phases creates two rendering paths, which is the named anti-pattern in ARCHITECTURE.md.
-- App Check deferred to Phase 3: it is required before any public URL is shared, but it actively complicates local development. Debug tokens handle dev; production App Check is a pre-launch step.
+- **AI integration is the hard dependency:** The typewriter display, download button, and regenerate button all require a real compliment from the AI. Phases 2 and 3 cannot start until Phase 1 delivers working generation.
+- **Card and download belong together in Phase 2:** They share the same `forwardRef` DOM node. Building them in separate phases creates two rendering paths and risks visual drift between the screen card and the exported card.
+- **Background is genuinely decoupled:** `AnimatedIconBackground` could theoretically be built first, but it is lower priority (P2) and its mobile positioning behavior is best validated after the core flow is working on a real device.
+- **Font pipeline spans Phases 1-2:** Self-hosted Caveat font is already in place (v1.0). Phase 1 ensures Firebase is configured. Phase 2 validates font embedding in the PNG — this requires real AI content on the card to test correctly.
+- **Security before UI:** Remote Config, prompt injection guards, and 429 handling go into Phase 1. The UI layers in Phase 2 sit on top of a secured foundation.
 
 ### Research Flags
 
 Phases likely needing deeper research during planning:
-- **Phase 2 (Card Export):** Font loading and CORS canvas behavior have known edge cases that vary by browser and hosting environment. The `document.fonts.ready` + self-hosted font approach is well-documented but the specific font files (Caveat, Pacifico) should be verified to load correctly in html-to-image's SVG foreignObject path on a real deployment before Phase 2 is considered complete.
+- None identified — all three phases have well-documented patterns with HIGH confidence sources from official documentation.
 
 Phases with standard patterns (skip research-phase):
-- **Phase 1 (Foundation):** Firebase AI Logic setup follows official documentation exactly. Remote Config for model name is documented with code samples. No novel integration work.
-- **Phase 3 (Polish/Prod):** Firebase App Check with reCAPTCHA v3 has a standard documented integration. Typewriter animation is a solved UI pattern.
+- **Phase 1:** Firebase AI Logic official docs are comprehensive with working code samples. Remote Config for model name is documented with a real-time listener pattern. 429 error handling is standard async/await error branching.
+- **Phase 2:** html-to-image font pipeline is thoroughly documented via confirmed workarounds in the project's GitHub issues. Typewriter accessibility is a two-line addition with definitive WCAG guidance.
+- **Phase 3:** CSS `@keyframes` + Tailwind v4 `@theme` follows official documentation. Animation performance guidance from MDN is definitive.
+
+---
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All versions verified against npm registry and official docs; Firebase AI Logic API verified against firebase.google.com; Tailwind v4 Vite setup verified from official blog |
-| Features | HIGH (core), MEDIUM (competitors) | Core feature set and dependency graph are well-reasoned; competitor analysis is surface-level and based on live product observation, not internal data |
-| Architecture | HIGH | Firebase AI Logic official docs are comprehensive; build order is derived directly from the dependency graph with no gaps; folder structure follows well-established React patterns |
-| Pitfalls | HIGH | All six critical pitfalls are verified against official sources or well-documented open-source issue trackers; the model deprecation schedule is from Firebase's published deprecation page |
+| Stack | HIGH | All packages verified via npm; Firebase AI Logic from official firebase.google.com docs; animation approach from official Tailwind v4 docs; html-to-image confirmed via maintainer repo |
+| Features | HIGH | Core feature set and dependency graph are well-reasoned from official docs and confirmed UX patterns; competitor analysis is surface-level but consistent across multiple observations |
+| Architecture | HIGH | Firebase AI Logic architecture confirmed against official docs (not inferred); build order derived directly from explicit dependency graph; file structure is additive on validated v1.0 foundation |
+| Pitfalls | HIGH | All critical pitfalls sourced from official docs (deprecation schedule, quota changes December 2025), confirmed security research (Truffle Security February 2026), and long-standing tracked library issues with confirmed workarounds |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **html-to-image behavior with specific Google Fonts (Caveat, Pacifico) in SVG foreignObject:** Community sources confirm the general approach works; specific font files on the Google Fonts CDN have not been verified in this exact configuration. Treat Phase 2 font capture as requiring end-to-end testing on a real deployment before sign-off, not just localhost.
-- **Gemini Flash streaming integration with Firebase AI Logic client SDK:** STACK.md confirms streaming is available; PITFALLS.md recommends it for perceived performance. The specific streaming API surface (`generateContentStream`) is not detailed in the architecture code samples. Verify the streaming hook implementation against Firebase AI Logic docs during Phase 1 implementation.
-- **React 19 + react-hook-form compatibility:** Marked as MEDIUM confidence in STACK.md ("React 19 compatible per community reports"). For a single name input, `useState` with manual validation is the safer path; use react-hook-form only if validation UX requirements justify it after Phase 1 is running.
+- **Firebase AI Logic streaming API surface:** FEATURES.md flags MEDIUM confidence on streaming with Firebase AI Logic specifically (`generateContentStream` vs Genkit's `streamFlow`). The general approach is confirmed; the exact API surface should be verified against Firebase AI Logic docs during Phase 1 implementation before the typewriter display in Phase 2 is built on top of it.
+
+- **Self-hosted font on localhost in html-to-image (GitHub issue #412):** There are reports of self-hosted fonts served from localhost not embedding correctly in html-to-image even with the `getFontEmbedCSS` workaround. This may not affect production (where fonts are served from the same origin with correct headers). Verify card download on a deployed staging URL early in Phase 2 — do not rely on localhost testing alone. If staging fails, the fallback is reading the woff2 file as base64 and injecting via `fontEmbedCSS` option directly.
+
+- **Firebase project prerequisite:** The entire Phase 1 assumes a Firebase project exists with AI Logic enabled in the Firebase console. If this is not yet configured, it is the first prerequisite step before any code is written.
+
+---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Firebase AI Logic official docs (firebase.google.com/docs/ai-logic) — client SDK architecture, App Check integration, quota and rate limits, Remote Config for model name, deprecation schedule
-- Firebase Hosting docs (firebase.google.com/docs/hosting) — static SPA vs App Hosting distinction
-- npm registry — verified package versions for firebase, react, vite, tailwindcss, html-to-image, lucide-react, react-hook-form
-- Tailwind CSS blog (tailwindcss.com/blog/tailwindcss-v4) — Vite plugin setup, zero-config approach
-- OWASP LLM01:2025 (genai.owasp.org) — prompt injection risk classification and mitigation
+- Firebase AI Logic official docs (firebase.google.com/docs/ai-logic) — client SDK architecture, security proxy, API key handling, supported models and deprecation schedule
+- Firebase AI Logic get started (firebase.google.com/docs/ai-logic/get-started) — setup steps, initialization pattern, `getGenerativeModel` API
+- Firebase Remote Config for model name (firebase.google.com/docs/ai-logic/change-model-name-remotely) — real-time listener pattern
+- Firebase AI Logic quotas (firebase.google.com/docs/ai-logic/quotas) — 429 behavior, December 2025 quota changes
+- Genkit overview (genkit.dev) — confirms Node.js-only runtime; cannot run in browser; "do not use non-type imports from genkit in browser apps"
+- Tailwind CSS animation docs (tailwindcss.com/docs/animation) — `@theme` custom `@keyframes` + `--animate-*` token syntax
+- html-to-image issue #213 (github.com/bubkoo/html-to-image/issues/213) — `document.fonts.ready` + `getFontEmbedCSS` workaround, confirmed by multiple reporters
+- OWASP LLM01:2025 (genai.owasp.org) — prompt injection risk classification, XML delimiter mitigation
 - CSS Font Loading API (MDN) — `document.fonts.ready` usage
-- React folder structure 2025 — Robin Wieruch (robinwieruch.de) — feature-based project structure
+- WCAG 2.1 SC 2.3.3 — animation from interactions, `prefers-reduced-motion` requirement
+- npm registry — all package versions verified via `npm show`
 
 ### Secondary (MEDIUM confidence)
-- Firebase blog: Building AI-powered apps with Firebase AI Logic — architecture patterns, Genkit vs client SDK boundary
-- html-to-image vs html2canvas comparison (Better Programming) — library recommendation rationale
-- Cloudscape Design System GenAI loading states (AWS) — streaming vs spinner UX patterns
-- Comprehensive analysis of Firebase Functions cold starts (Java Code Geeks) — cold start latency data
-- Shape of AI — Regenerate pattern — UX pattern for single-shot overwrite vs branching
-- Digital Greeting Card Trends 2025 (expresswithacard.com) — market context for shareable card demand
+- html-to-image issue #412 (github.com/bubkoo/html-to-image/issues/412) — localhost font embedding bug; may not affect production; confirmed by multiple reporters
+- Genkit startFlowServer CORS bug issue #3434 — documented CORS issue with Genkit's own CORS option; moot if using Firebase AI Logic
+- Truffle Security research (February 2026) — ~3,000 public Google API keys now expose Gemini endpoints
+- LogRocket typewriter animation patterns — confirms streaming-native approach is cleanest React implementation
+- Web Animation Performance Tier List (Motion.dev) — GPU-composited vs paint-triggering property classification
+- On fixed elements and backgrounds (Chen Hui Jing) — iOS Safari `position: fixed` behavior with virtual keyboard
+- Accessible typewriter animations (cyishere.dev) — `aria-hidden` + `sr-only` pattern confirmed
+- Josh W. Comeau `prefers-reduced-motion` guide — correct React implementation pattern
 
 ### Tertiary (LOW confidence)
-- Competitor feature analysis (easy-peasy.ai, junia.ai, yeschat.ai) — surface review; internal product decisions unknown
-- html2canvas GitHub issues #328, #1463, #1940, #3198 — font loading failure documentation; well-documented but older issues, html-to-image is the recommended mitigation
+- Competitor analysis (easy-peasy.ai, junia.ai) — feature landscape; surface review only; internal product decisions unknown
+- html2canvas issue tracker (issues #328, #1463, #1940, #3198) — historical font loading failure documentation; html-to-image is the recommended mitigation
 
 ---
-*Research completed: 2026-03-13*
+*Research completed: 2026-03-14*
 *Ready for roadmap: yes*

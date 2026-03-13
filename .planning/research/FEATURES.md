@@ -1,10 +1,168 @@
 # Feature Research
 
 **Domain:** AI fun text generator / compliment card web app
-**Researched:** 2026-03-13
-**Confidence:** HIGH (core features), MEDIUM (competitor specifics)
+**Researched:** 2026-03-14 (v2.0 milestone update)
+**Confidence:** HIGH (core features, implementation patterns), MEDIUM (Genkit streaming architecture)
 
-## Feature Landscape
+---
+
+## v2.0 Milestone: Technical Feature Behaviors
+
+This section documents the *how* for each new feature being built in the v2.0 milestone. The prior research (below) covers the feature landscape. This addendum covers implementation mechanics, table stakes vs differentiators, complexity, and dependencies on existing DLS/Card components.
+
+---
+
+### Feature 1: AI Text Generation (Streaming vs Non-Streaming)
+
+**What it is:** Calling Genkit's Gemini Flash integration from the React app and getting a compliment back.
+
+**Architecture reality (HIGH confidence):** Genkit runs server-side only. It cannot execute in the browser. The pattern is:
+1. React client calls a deployed Genkit flow via HTTP (using `runFlow` or `streamFlow` from `genkit/beta/client`)
+2. Genkit flow runs on a Node.js server (Express, Cloud Run, or Firebase Cloud Functions)
+3. The flow calls Gemini Flash, then returns the result to the client
+
+**Non-streaming (simplest):** `runFlow()` — fire request, await complete response. No partial text visible. Latency is the full generation time (~1-3s for Gemini Flash). Good enough for short compliments; users see nothing until it's done.
+
+**Streaming:** `streamFlow()` returns an async iterable. Each `chunk.text` is a partial string. React iterates chunks and appends to displayed text. Creates the "typewriter" feel without needing a separate animation library. This is the better UX choice for this app because:
+- Reduces perceived latency (text starts appearing immediately)
+- Naturally produces the typewriter effect without additional complexity
+- Gemini Flash streaming chunks arrive fast — real-world feel is smooth
+
+**Table stakes vs differentiator:**
+- Table stakes: AI generation working at all (name in → compliment out)
+- Differentiator: Streaming display that makes it feel alive vs a spinner then dump
+
+**Complexity:** MEDIUM — requires a running Node.js backend with Genkit configured. This is the most architecturally significant feature in v2.0. It is not "add a library and call an API" — it requires a server component.
+
+**Dependency on existing components:** None from DLS — this is pure logic. The output feeds into ComplimentCard props (`name` and `compliment`).
+
+---
+
+### Feature 2: Typewriter Text Animation in React
+
+**What it is:** Character-by-character reveal of the compliment text as it appears on the card.
+
+**Two implementation paths:**
+
+**Path A — Streaming-native typewriter (RECOMMENDED):** If using `streamFlow`, each chunk is a partial string. Appending chunks to state in real time IS the typewriter effect. No separate animation needed. The chunk cadence from Gemini Flash creates natural variation in speed, which actually looks better than a fixed-interval timer.
+
+```
+streamFlow chunk → append to React state → re-render card text
+```
+
+**Path B — Simulated typewriter (fallback for non-streaming):** If using `runFlow` (full response at once), simulate typewriter with `useEffect` + `setInterval` or `setTimeout`:
+- Store full text in state
+- Store display index in state
+- `setInterval` increments index, revealing one character at a time
+- Clean up interval in `useEffect` return
+
+**Table stakes:** Some kind of generation feedback (skeleton, pulse, or typewriter) — users need to know something is happening. A blank card during generation feels broken.
+
+**Differentiator:** Typewriter specifically — it is warmer than a spinner and pairs naturally with the "dramatic reveal" personality of the app.
+
+**Complexity:** LOW (streaming-native) / LOW-MEDIUM (simulated)
+
+**Dependency on existing components:** The typewriter text renders inside ComplimentCard. The ComplimentCard component must accept either a `compliment` prop (complete text) or be compatible with partial/growing text. Since it's just a string prop, this works without changes.
+
+**Anti-pattern:** Do not use a third-party typewriter library (TypeIt.js, react-type-animation) — they add dependency weight for behavior you get for free from streaming, or can implement in ~15 lines.
+
+---
+
+### Feature 3: HTML-to-Image Card Download with Custom Fonts
+
+**What it is:** Capturing the rendered ComplimentCard DOM node as a PNG and downloading it.
+
+**Library:** `html-to-image` (bubkoo/html-to-image) is the standard for this. It uses SVG foreignObject + Canvas to capture a DOM node. `toPng()` is the primary function.
+
+**The font problem (HIGH confidence — verified via GitHub issues):** Canvas operations taint when fonts are loaded cross-origin (e.g., Google Fonts CDN). A tainted canvas throws when you try to export pixel data. Self-hosted fonts avoid this. This project already self-hosts Caveat — this was the right decision at v1.0.
+
+**The font timing problem (MEDIUM confidence):** Even with self-hosted fonts, `html-to-image` may capture the card before the font is loaded and render fallback system fonts. The fix: `await document.fonts.ready` before calling `toPng()`. This guarantees the browser has loaded and rendered all fonts before the capture.
+
+**The double-render issue:** `html-to-image` internally renders the node twice (once to measure, once to capture). Always call `getFontEmbedCSS(element)` once and pass the result to `toPng()` as an option to avoid fetching fonts twice.
+
+**Correct implementation pattern:**
+```typescript
+await document.fonts.ready;
+const fontEmbedCSS = await getFontEmbedCSS(cardRef.current);
+const dataUrl = await toPng(cardRef.current, { fontEmbedCSS });
+// then trigger download via anchor click
+```
+
+**Table stakes:** Download button works and produces a PNG that looks like what's on screen.
+
+**Differentiator:** Font renders correctly in the downloaded PNG (looks designed, not broken). Most simple implementations miss the font timing issue and ship broken downloads.
+
+**Complexity:** MEDIUM — the implementation is ~10 lines but the font pipeline has three specific pitfalls that will cause silent failures if not handled.
+
+**Dependency on existing components:** Hard dependency on ComplimentCard. The card must be rendered (not hidden, not zero-opacity) at the moment of capture. If the card is conditionally rendered (`&&`), it must be visible. Use `visibility: hidden` instead of `display: none` if you need to pre-render it off-screen.
+
+**Known limitation (LOW confidence — from GitHub issue #412):** There are reports of self-hosted fonts served from localhost not embedding correctly even with `getFontEmbedCSS`. This may not affect production (where fonts are served from the same origin with correct headers). Worth testing early in development against `localhost` specifically.
+
+---
+
+### Feature 4: Animated Floating Icon Background
+
+**What it is:** Pixelarticons scattered behind the main card, with subtle movement (float/pulse) to add life to the page without distracting from the card.
+
+**Implementation approach:** Pure CSS with Tailwind + `@keyframes` in the CSS file. No animation library needed.
+
+**Layout:** Use `position: fixed` or `position: absolute` on a container div behind the card (`z-index: -1`). Place 8-12 icon instances at random-ish positions using inline styles or a set of Tailwind-based position classes. Fixed positions work better than truly random for reproducibility and visual balance.
+
+**Float animation:** Classic CSS float is a translateY oscillation:
+```css
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+```
+
+**Border pulse animation:** A box-shadow or outline pulse using `@keyframes`:
+```css
+@keyframes borderPulse {
+  0%, 100% { box-shadow: 0 0 0 2px transparent; }
+  50% { box-shadow: 0 0 0 4px var(--color-blue-200); }
+}
+```
+
+**Variety:** Stagger `animation-delay` and `animation-duration` per icon so they don't all move in sync. Different durations (3s, 4s, 5s) create organic feel.
+
+**Color fill:** Pixelarticons are SVGs. Apply a color via Tailwind `text-*` classes (if icons use `currentColor`) or via CSS `fill` property. The DLS already defines the color tokens — use soft blue and cream tints so icons stay background-tier, not foreground.
+
+**Table stakes:** Background is visually interesting without being distracting. Icons don't overlap the card or input.
+
+**Differentiator:** The combination of retro pixel icons + calm floating animation reinforces the app's personality. No competitor does this.
+
+**Complexity:** LOW — pure CSS, no library, no JavaScript. The main work is choosing positions and tuning timing values. The Icon component already exists (v1.0).
+
+**Dependency on existing components:** Hard dependency on the Icon component from v1.0. Uses existing pixelarticons set and color tokens from DLS.
+
+**Anti-pattern:** Do not use a JS-driven animation (requestAnimationFrame, setInterval updating positions) — CSS animations are GPU-composited, cheaper, and simpler for this decorative use case.
+
+---
+
+### Feature 5: Mobile-Responsive Single-Column Layout
+
+**What it is:** The page layout stacks vertically on mobile (name input → card → download button) rather than any side-by-side arrangement.
+
+**Tailwind v4 approach:** Mobile-first by default. Use `flex flex-col` as base, then `md:flex-row` if a wider layout is needed on desktop. For this app, single-column may be correct on all breakpoints given the centered, focused interaction model.
+
+**Key responsive concerns:**
+- ComplimentCard must be readable at small widths — set `max-w-full` or `w-full` on mobile, `max-w-sm` or similar on desktop
+- Name input should be full-width on mobile
+- Download button should be full-width on mobile (easier tap target)
+- Animated background icons may need to be fewer or smaller on mobile to avoid cluttering a small viewport
+
+**Table stakes:** Layout does not break on iPhone-sized screens. No horizontal scroll. Text does not overflow the card.
+
+**Differentiator:** None — this is purely expected behavior. Missing it would severely hurt the experience since casual/fun web traffic skews heavily mobile.
+
+**Complexity:** LOW — Tailwind v4 responsive utilities make this straightforward. The DLS already uses Tailwind v4 CSS-only config (`@theme` block), so there's no new configuration needed.
+
+**Dependency on existing components:** ComplimentCard width behavior. The card was designed at a fixed width for the kitchen sink screen — ensure it responds to its container width rather than having a hardcoded `width` value.
+
+---
+
+## Feature Landscape (v1.0 Research — Preserved)
 
 ### Table Stakes (Users Expect These)
 
@@ -26,12 +184,12 @@ Features that set the product apart. Not required, but valued.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Downloadable styled card image | The card IS the shareable artifact — this is the core product differentiator, not just text on a screen | HIGH | Use `html-to-image` or `html2canvas` to render the styled card div to PNG; `toBlob()` + `URL.createObjectURL()` preferred over `toDataURL()` for performance |
+| Downloadable styled card image | The card IS the shareable artifact — this is the core product differentiator, not just text on a screen | HIGH | Use `html-to-image` to render the styled card div to PNG; `toBlob()` + `URL.createObjectURL()` preferred over `toDataURL()` for performance |
 | Calm/cozy visual design contrast | The humor comes from the contrast: soft, elegant aesthetic + absurdly dramatic text — this is the brand identity | MEDIUM | DLS-first approach validates this contrast before any feature is built |
-| Handwritten / whimsical typography | Sets emotional tone; makes card feel like a personal gift, not a template | LOW | Font choice at DLS layer; Google Fonts (Caveat, Pacifico, or similar) |
-| Retro techy icon system | Adds visual personality that separates EgoBoost from generic AI tools | LOW | Icon set chosen at DLS layer; inline SVGs preferred for styling control |
-| Typed/animated compliment reveal | Typewriter-style appearance makes the generation feel alive and builds anticipation | MEDIUM | TypeIt.js or CSS animation; plays once on generation, not on every render cycle |
-| Themed card layout (not raw text box) | The download card feels designed — framed, with name, decorative elements — not a screenshot of a text box | MEDIUM | Card component is a styled React component that maps directly to the download artifact |
+| Handwritten / whimsical typography | Sets emotional tone; makes card feel like a personal gift, not a template | LOW | Self-hosted Caveat font (already done in v1.0) |
+| Retro techy icon system | Adds visual personality that separates EgoBoost from generic AI tools | LOW | Pixelarticons (already done in v1.0); animated background use in v2.0 |
+| Typed/animated compliment reveal | Typewriter-style appearance makes the generation feel alive and builds anticipation | MEDIUM | Streaming-native typewriter preferred over simulation; plays once on generation |
+| Themed card layout (not raw text box) | The download card feels designed — framed, with name, decorative elements — not a screenshot of a text box | MEDIUM | ComplimentCard component (already done in v1.0) maps directly to the download artifact |
 
 ### Anti-Features (Commonly Requested, Often Problematic)
 
@@ -53,86 +211,81 @@ Features that seem good but create problems.
 ```
 [Name Input]
     └──enables──> [Generate Button activation]
-                      └──triggers──> [AI Compliment Generation]
-                                         └──populates──> [Compliment Display]
-                                                             └──enables──> [Regenerate Button]
-                                                             └──enables──> [Download Card Button]
+                      └──triggers──> [AI Compliment Generation (Genkit + Gemini Flash)]
+                                         └──streams into──> [Typewriter Display on ComplimentCard]
+                                                               └──enables──> [Regenerate Button]
+                                                               └──enables──> [Download Card Button]
 
-[Design Language System (DLS)]
-    └──required by──> [Styled Card Component]
-                          └──required by──> [Download Card as Image]
+[Design Language System (DLS) — v1.0 complete]
+    └──required by──> [ComplimentCard Component — v1.0 complete]
+                          └──required by──> [Typewriter Display]
+                          └──required by──> [Download Card as PNG]
+                          └──required by──> [Animated Background Icons]
 
-[Compliment Display]
-    └──requires──> [Loading / Generation State]
-    └──requires──> [Error State]
+[Download Card as PNG]
+    └──requires──> [ComplimentCard rendered and visible]
+    └──requires──> [document.fonts.ready]
+    └──requires──> [html-to-image library]
+    └──requires──> [Self-hosted Caveat font — v1.0 complete]
 
-[Download Card as Image]
-    └──requires──> [Styled Card Component]
-    └──requires──> [html-to-image / html2canvas library]
+[Animated Icon Background]
+    └──requires──> [Icon component — v1.0 complete]
+    └──requires──> [DLS color tokens — v1.0 complete]
+    └──CSS only──> no JS dependencies
+
+[Genkit Flow (server-side)]
+    └──requires──> [Node.js server / Cloud Run / Firebase Functions]
+    └──client calls via──> [streamFlow from genkit/beta/client]
 ```
 
 ### Dependency Notes
 
-- **Generate Button requires Name Input:** The button should be disabled or visually inert until a name is entered — prevents empty-name API calls.
-- **Download Card requires Styled Card Component:** The download artifact IS the card component rendered to PNG. They are the same thing; build them together, not separately.
-- **DLS required by everything visual:** The card's downloadable quality depends entirely on the design system being correct first. DLS-first is not optional for this project — it's a hard dependency.
-- **Compliment Display requires Loading State:** Generation takes 1-3 seconds. The display area must handle three states: empty (pre-generation), loading, and populated.
-- **Regenerate conflicts with history:** Overwrite-mode regeneration (replace current) conflicts with any future history feature. If history is ever added, the regeneration model needs to change to branching. Keep this in mind for v2.
+- **Streaming requires a server:** Genkit cannot run in the browser. A Node.js server (Express or equivalent) must be running and accessible for `streamFlow` to work. This is the largest architectural dependency in v2.0.
+- **Download requires visible card:** `html-to-image` captures the DOM. The card must be rendered and visible (not `display: none`) at capture time. Use `visibility: hidden` if hiding before generation.
+- **Typewriter is free with streaming:** If streaming is implemented, the typewriter effect comes naturally from appending chunks to state. No separate animation library needed.
+- **Background icons require Icon component:** The animated background is composed of existing Icon instances with CSS animation — not a new component. Build on v1.0 work directly.
+- **Font correctness is critical for download quality:** Self-hosted fonts + `document.fonts.ready` + `getFontEmbedCSS` are all three required for reliable font rendering in the exported PNG. Missing any one of these causes silent font fallback.
 
 ## MVP Definition
 
-### Launch With (v1)
+### Launch With (v2.0)
 
-Minimum viable product — what's needed to validate the concept.
+- [ ] Genkit server running (Node.js/Express or Firebase Functions) with Gemini Flash flow — the AI backbone; nothing works without this
+- [ ] `streamFlow` call from React client — name input triggers streaming generation
+- [ ] Streaming typewriter display on ComplimentCard — text appears live as chunks arrive
+- [ ] Error state with friendly message + retry — API calls fail; must handle gracefully
+- [ ] Regenerate button — single-shot is too limiting
+- [ ] Download card as PNG — `html-to-image` with `document.fonts.ready` + `getFontEmbedCSS`
+- [ ] Animated background icons — pixelarticons with float + pulse CSS animations
+- [ ] Mobile-responsive single-column layout — full-width card and inputs on mobile
 
-- [ ] Name input + Generate button — the entry point; nothing works without this
-- [ ] Gemini Flash API call via Firebase — core AI integration; prompt engineering for dramatic style lives here
-- [ ] Loading state with typewriter animation — generation feedback; prevents perceived brokenness
-- [ ] Error state with retry — API calls fail; must handle gracefully
-- [ ] Compliment output display — the payoff moment
-- [ ] Regenerate button — single-shot is too limiting; users need to explore
-- [ ] Styled card component — the designed artifact that frames name + compliment
-- [ ] Download card as PNG — the differentiator; this is the core value proposition
-- [ ] DLS / kitchen sink validation screen — design system first; validates visual language before building features
+### Add After Validation (v2.x)
 
-### Add After Validation (v1.x)
+- [ ] Copy compliment text to clipboard — add only if analytics show users want raw text
+- [ ] Subtle card entrance animation on reveal — low effort, high delight potential
+- [ ] Reduced-motion media query respect for animations — accessibility improvement
 
-Features to add once core is working.
+### Future Consideration (v3+)
 
-- [ ] Copy compliment text to clipboard — add if analytics show users want raw text; only if download UX proves insufficient
-- [ ] Subtle card animation on reveal — add if the static card reveal feels flat; low effort, high delight potential
-- [ ] Mobile PWA / "Add to Home Screen" hint — add if mobile usage is high and session data shows repeat visitors
+- [ ] Multiple compliment styles / vibes — after user feedback shows demand
+- [ ] User history / saved compliments — requires auth + storage
+- [ ] Shareable card URL — requires storage and URL-based rendering
 
-### Future Consideration (v2+)
-
-Features to defer until product-market fit is established.
-
-- [ ] Multiple compliment styles / vibes — defer until user feedback explicitly requests variety; risks diluting brand voice
-- [ ] User history / saved compliments — defer; requires auth + storage stack; not validated yet
-- [ ] Photo upload personalization — defer; high complexity, content moderation required, unproven value
-- [ ] Multiple language support — defer; validate English-first, then expand if international demand is clear
-- [ ] Shareable card URL (not just download) — defer; requires storage and URL-based card rendering
-
-## Feature Prioritization Matrix
+## Feature Prioritization Matrix (v2.0 Scope)
 
 | Feature | User Value | Implementation Cost | Priority |
 |---------|------------|---------------------|----------|
-| Name input + Generate button | HIGH | LOW | P1 |
-| AI compliment output | HIGH | LOW | P1 |
-| Loading / generation state | HIGH | LOW | P1 |
-| Error state | HIGH | LOW | P1 |
-| Regenerate button | HIGH | LOW | P1 |
-| Styled card component | HIGH | MEDIUM | P1 |
+| AI generation via Genkit + streamFlow | HIGH | HIGH | P1 |
+| Streaming typewriter display | HIGH | LOW (free with streaming) | P1 |
 | Download card as PNG | HIGH | MEDIUM | P1 |
-| DLS / kitchen sink screen | HIGH (enables all) | MEDIUM | P1 |
-| Typewriter animation on reveal | MEDIUM | MEDIUM | P2 |
-| Copy to clipboard | LOW | LOW | P3 |
-| Social sharing buttons | LOW | HIGH | P3 |
-| User accounts / history | LOW | HIGH | P3 |
-| Photo upload | LOW | HIGH | P3 |
+| Error state + retry | HIGH | LOW | P1 |
+| Regenerate button | HIGH | LOW | P1 |
+| Mobile-responsive layout | HIGH | LOW | P1 |
+| Animated background icons | MEDIUM | LOW | P2 |
+| document.fonts.ready font fix | HIGH (invisible if missing) | LOW | P1 |
 
 **Priority key:**
-- P1: Must have for launch
+- P1: Must have for v2.0 launch
 - P2: Should have, add when possible
 - P3: Nice to have, future consideration
 
@@ -147,23 +300,31 @@ Features to defer until product-market fit is established.
 | Designed card output | No | No | No | YES — styled component = shareable artifact |
 | Mobile experience | Basic (template tool) | Basic | Native app | Responsive web; mobile-first layout |
 | Aesthetic / design | Generic template | Generic tool | Generic app | Intentional: calm/cozy vs. dramatic text |
-| Streaming / typewriter | No | No | Unknown | Yes — typewriter animation on reveal |
+| Streaming / typewriter | No | No | Unknown | Yes — streaming-native typewriter |
 | Auth required | Yes (account) | Yes (account) | Yes (account) | No — fully stateless |
+| Animated background | No | No | No | Yes — pixelarticons with float/pulse |
 
-**Key insight:** No competitor combines (a) a designed downloadable card with (b) a single over-the-top comedic voice with (c) a strong visual aesthetic identity. The download-as-designed-card angle is genuinely unoccupied territory in the compliment generator space.
+**Key insight:** No competitor combines (a) a designed downloadable card with (b) a single over-the-top comedic voice with (c) a strong visual aesthetic identity and (d) animated background personality. The download-as-designed-card angle remains genuinely unoccupied territory.
 
 ## Sources
 
-- [Easy-Peasy.AI Compliment Generator](https://easy-peasy.ai/templates/compliment-generator) — competitor feature analysis (MEDIUM confidence — live product observed)
+**v2.0 Research (2026-03-14):**
+- [Genkit Client Library docs](https://genkit.dev/docs/client/) — runFlow and streamFlow API (HIGH confidence — official docs)
+- [Genkit generateStream API](https://genkit.dev/docs/models/) — streaming generation mechanics (HIGH confidence — official docs)
+- [Streaming Cloud Functions for Firebase blog post](https://firebase.blog/posts/2025/03/streaming-cloud-functions-genkit/) — streaming architecture with onCallGenkit trigger (HIGH confidence — official Firebase blog, March 2025)
+- [html-to-image GitHub](https://github.com/bubkoo/html-to-image) — toPng, getFontEmbedCSS, font embedding (MEDIUM confidence — widely used library, some open issues with localhost fonts)
+- [html-to-image issue #213 — document.fonts support](https://github.com/bubkoo/html-to-image/issues/213) — confirmed font loading gap (HIGH confidence — primary source issue thread)
+- [html-to-image issue #412 — localhost font rendering](https://github.com/bubkoo/html-to-image/issues/412) — localhost-specific font embed bug (MEDIUM confidence — issue thread, may not affect production)
+- [LogRocket — 5 ways to implement typing animation in React](https://blog.logrocket.com/5-ways-implement-typing-animation-react/) — typewriter patterns (MEDIUM confidence)
+- [Tailwind CSS responsive design docs](https://tailwindcss.com/docs/responsive-design) — mobile-first breakpoints (HIGH confidence — official docs)
+- [Smashing Magazine — Keyframes Tokens](https://www.smashingmagazine.com/2025/11/keyframes-tokens-standardizing-animation-across-projects/) — CSS animation token patterns (MEDIUM confidence)
+
+**v1.0 Research (2026-03-13):**
+- [Easy-Peasy.AI Compliment Generator](https://easy-peasy.ai/templates/compliment-generator) — competitor feature analysis (MEDIUM confidence)
 - [Junia.ai Compliment Generator](https://www.junia.ai/tools/compliment-generator) — competitor feature analysis (MEDIUM confidence)
-- [YesChat Compliment Me](https://www.yeschat.ai/gpts-ZxWyYSef-Compliment-Me) — competitor feature analysis (LOW confidence — surface review only)
-- [Shape of AI — Regenerate Pattern](https://www.shapeof.ai/patterns/regenerate) — UX pattern for regeneration (HIGH confidence — authoritative AI UX pattern library)
-- [Cloudscape Design System — GenAI Loading States](https://cloudscape.design/patterns/genai/genai-loading-states/) — loading state best practices (HIGH confidence — AWS official design system)
-- [html-to-image GitHub](https://github.com/bubkoo/html-to-image) — DOM-to-PNG library for card download (MEDIUM confidence — widely used, check version compatibility)
-- [MDN — HTMLCanvasElement.toDataURL()](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toDataURL) — image export best practices (HIGH confidence — MDN official)
-- [Digital Greeting Card Trends 2025](https://expresswithacard.com/blog/trends-digital-greeting-cards-2025) — market context for shareable card demand (MEDIUM confidence)
-- [LLMs and the Psychology Behind Loading Animations](https://tigerabrodi.blog/llms-and-the-psychology-behind-loading-animations) — streaming vs spinner UX rationale (MEDIUM confidence)
+- [Shape of AI — Regenerate Pattern](https://www.shapeof.ai/patterns/regenerate) — UX pattern for regeneration (HIGH confidence)
+- [Cloudscape Design System — GenAI Loading States](https://cloudscape.design/patterns/genai/genai-loading-states/) — loading state best practices (HIGH confidence)
 
 ---
 *Feature research for: AI compliment generator / fun text generator web app (EgoBoost 3000)*
-*Researched: 2026-03-13*
+*v1.0 researched: 2026-03-13 | v2.0 updated: 2026-03-14*

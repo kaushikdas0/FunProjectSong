@@ -1,140 +1,284 @@
 # Stack Research
 
 **Domain:** AI-powered compliment card generator (React + Firebase web app)
-**Researched:** 2026-03-13
-**Confidence:** HIGH (core stack), MEDIUM (card image generation specifics)
+**Researched:** 2026-03-14 (updated for v2.0 milestone)
+**Confidence:** HIGH (Genkit + html-to-image), HIGH (CSS animations)
 
-## Recommended Stack
+---
 
-### Core Technologies
+## What This File Covers (v2.0 additions only)
+
+The existing stack (Vite 8, React 19, TypeScript, Tailwind v4, Caveat font, pixelarticons) is
+validated and does not need re-research. This file documents only what is being ADDED or CHANGED
+for the v2.0 milestone.
+
+---
+
+## New Dependencies
+
+### Core — AI Generation via Genkit
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| React | 19.2.4 | UI framework | Constrained choice; React 19 adds concurrent features and improved hooks — no reason to pin to 18 |
-| Vite | 8.0.0 | Build tool + dev server | Standard pairing with React in 2025; fast HMR, first-class static deploy support, official Firebase + Vite guides exist |
-| TypeScript | 5.x (bundled via Vite) | Type safety | Prevents class of bugs in AI response handling; Vite scaffolds it by default with React template |
-| Firebase JS SDK | 12.10.0 | Auth, Hosting, App Check, AI Logic gateway | The single `firebase` npm package includes all services including the AI Logic SDK (`firebase/ai`) |
-| Firebase AI Logic (`firebase/ai`) | included in firebase@12 | Gemini Flash access via Firebase proxy | Keeps the Gemini API key server-side through Firebase's proxy; enables App Check protection; avoids exposing credentials in client bundle |
-| Tailwind CSS | 4.2.1 | Styling | v4 setup is a single `@import "tailwindcss"` line — zero config file needed; Vite plugin replaces PostCSS setup; strong fit for utility-based card layout |
+| `genkit` | 1.30.1 | Genkit runtime core | Required peer for all Genkit plugins; provides `ai.generate()`, `ai.defineFlow()`, schema validation via Zod |
+| `@genkit-ai/google-genai` | 1.30.1 | Gemini Flash access | Official Google AI plugin for Genkit; replaces deprecated `@genkit-ai/googleai`; provides `googleAI()` plugin and `googleAI.model()` selector |
+| `@genkit-ai/express` | 1.30.1 | HTTP flow server | Wraps flows as Express endpoints via `startFlowServer()`; default port 3400; the "no Cloud Functions" approach — runs as a local Node.js process |
 
-### Supporting Libraries
+**Architecture note:** Genkit cannot run in the browser. "No Cloud Functions" means running a
+lightweight Express server (`startFlowServer`) as a local process alongside Vite. In dev, Vite
+proxies `/api/*` requests to `localhost:3400`. In production, this same Node.js server deploys
+anywhere that runs Node 20+ (Cloud Run, Firebase App Hosting, a plain VPS) — no Cloud Functions
+configuration required.
+
+### Supporting — Card Download
 
 | Library | Version | Purpose | When to Use |
 |---------|---------|---------|-------------|
-| html-to-image | 1.11.13 | Render DOM node to PNG for download | The card download feature — converts the styled React card component to a PNG blob and triggers browser download |
-| lucide-react | 0.577.0 | Icon set | Provides the "slightly retro techy" icon feel without a heavy icon font; tree-shakeable, React-first |
-| react-hook-form | 7.71.2 | Form state for name input | Overkill for a single input, but handles validation (empty name, whitespace) without re-render thrash; use if validation UX matters |
+| `html-to-image` | 1.11.13 | Render DOM node to PNG blob | The card download feature — `toPng(ref.current)` captures the styled ComplimentCard as a downloadable PNG |
+
+**Already in existing STACK.md as a recommendation — confirm it is installed.**
 
 ### Development Tools
 
-| Tool | Purpose | Notes |
-|------|---------|-------|
-| Firebase CLI | Local emulation, deploy to Firebase Hosting | `npm install -g firebase-tools`; use `firebase emulators:start` to test AI Logic calls locally without hitting production |
-| Vite preview | Local production build preview | `vite preview` before deploying; catches CSS purge issues with the card component |
-| Firebase App Check (reCAPTCHA v3) | Protect the Gemini API key from abuse | Not required for dev; required before any public URL goes live — prevents API key theft via client-side bundle inspection |
+| Tool | Version | Purpose | Notes |
+|------|---------|---------|-------|
+| `tsx` | 4.21.0 | Run TypeScript directly (no compile step) | Used to start the Genkit server in dev: `tsx --watch src/server/index.ts` |
+| `concurrently` | 9.2.1 | Run Vite + Genkit server in parallel | One `npm run dev` starts both processes; no separate terminal needed |
+| `genkit-cli` | 1.30.1 | Genkit developer UI + flow inspector | Optional; `genkit start` opens flow inspector at localhost:4000 for testing prompts without the UI |
+
+---
 
 ## Installation
 
 ```bash
-# Scaffold
-npm create vite@latest egoboost-3000 -- --template react-ts
-cd egoboost-3000
+# Genkit AI server
+npm install genkit @genkit-ai/google-genai @genkit-ai/express
 
-# Core
-npm install firebase
+# Card download (may already be installed — check package.json)
+npm install html-to-image
 
-# Tailwind v4 (Vite plugin — no tailwind.config.js needed)
-npm install tailwindcss @tailwindcss/vite
+# Dev tooling
+npm install -D tsx concurrently
 
-# Supporting
-npm install html-to-image lucide-react
-
-# Optional: form validation
-npm install react-hook-form
-
-# Dev tools
-npm install -D firebase-tools
+# Optional: Genkit CLI (global)
+npm install -g genkit-cli
 ```
 
-**Tailwind v4 vite.config.ts change:**
-```ts
-import tailwindcss from '@tailwindcss/vite'
-export default { plugins: [react(), tailwindcss()] }
+---
+
+## Integration Patterns with Existing Stack
+
+### Pattern 1: Genkit server alongside Vite dev server
+
+**File structure:**
+```
+src/
+  server/
+    index.ts        ← Genkit server (startFlowServer)
+    flows/
+      compliment.ts ← defineFlow for compliment generation
+  client/
+    App.tsx         ← existing React app
 ```
 
-**Tailwind v4 CSS entry (src/index.css):**
+**`src/server/index.ts`:**
+```typescript
+import { genkit, z } from 'genkit';
+import { googleAI } from '@genkit-ai/google-genai';
+import { startFlowServer } from '@genkit-ai/express';
+
+const ai = genkit({
+  plugins: [googleAI()],
+  model: googleAI.model('gemini-2.0-flash'),
+});
+
+export const complimentFlow = ai.defineFlow(
+  {
+    name: 'complimentFlow',
+    inputSchema: z.object({ name: z.string() }),
+    outputSchema: z.object({ compliment: z.string() }),
+  },
+  async ({ name }) => {
+    const { text } = await ai.generate(
+      `Write a single ridiculously dramatic, over-the-top compliment for ${name}. Make it absurdly theatrical. One paragraph.`
+    );
+    return { compliment: text };
+  }
+);
+
+startFlowServer({ flows: [complimentFlow], port: 3400 });
+```
+
+**`vite.config.ts` — proxy to Genkit server:**
+```typescript
+server: {
+  proxy: {
+    '/api': {
+      target: 'http://localhost:3400',
+      rewrite: (path) => path.replace(/^\/api/, ''),
+    },
+  },
+},
+```
+
+**`package.json` dev script:**
+```json
+"dev": "concurrently \"vite\" \"tsx --watch src/server/index.ts\""
+```
+
+**React client call (using `genkit/beta/client`):**
+```typescript
+import { runFlow } from 'genkit/beta/client';
+
+const result = await runFlow({
+  url: '/api/complimentFlow',
+  input: { name },
+});
+// result.compliment — the generated text
+```
+
+**Env var required:**
+```bash
+# .env.local (never commit)
+GEMINI_API_KEY=your_key_here
+```
+
+### Pattern 2: html-to-image card download with self-hosted font
+
+Self-hosted Caveat font (already installed via `@fontsource/caveat`) avoids Google Fonts CORS
+canvas-tainting. The key is waiting for fonts to be ready before capture.
+
+```typescript
+import { toPng } from 'html-to-image';
+
+async function downloadCard(cardRef: React.RefObject<HTMLDivElement>) {
+  // Wait for fonts to be fully loaded before capture
+  await document.fonts.ready;
+
+  const dataUrl = await toPng(cardRef.current!, {
+    cacheBust: true,               // prevents stale renders on regenerate
+    preferredFontFormat: 'woff2',  // embed only woff2, discard other formats
+    pixelRatio: 2,                 // 2x resolution for sharp cards on retina
+  });
+
+  const link = document.createElement('a');
+  link.download = 'my-compliment.png';
+  link.href = dataUrl;
+  link.click();
+}
+```
+
+**Known issue:** html-to-image's font auto-embedding from localhost can fail (open GitHub issue
+#412). The workaround is `document.fonts.ready` + `preferredFontFormat: 'woff2'`, which causes
+the library to re-embed from the already-loaded font rather than re-fetching. If fonts still fail
+to render in the export, the fallback is to read the woff2 file as base64 and inject it as a
+`fontEmbedCSS` option — but try the simple path first.
+
+### Pattern 3: CSS animations for background icon pulse (no new library needed)
+
+Tailwind v4's `@theme` block supports custom keyframes and `--animate-*` tokens. No animation
+library is needed — extend the existing CSS theme file.
+
+**Add to existing `src/index.css` (inside `@theme` block):**
 ```css
-@import "tailwindcss";
+@theme {
+  /* existing tokens... */
+
+  --animate-icon-pulse: icon-pulse 3s ease-in-out infinite;
+
+  @keyframes icon-pulse {
+    0%, 100% {
+      opacity: 0.15;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.35;
+      transform: scale(1.08);
+    }
+  }
+}
 ```
 
-**Firebase AI Logic initialization:**
-```ts
-import { initializeApp } from 'firebase/app'
-import { getAI, getGenerativeModel, GoogleAIBackend } from 'firebase/ai'
-
-const app = initializeApp(firebaseConfig)
-const ai = getAI(app, { backend: new GoogleAIBackend() })
-const model = getGenerativeModel(ai, { model: 'gemini-2.0-flash' })
+**Usage in JSX:**
+```tsx
+<span className="animate-icon-pulse" style={{ animationDelay: '0.4s' }}>
+  <Icon name="star" size={32} />
+</span>
 ```
+
+**Performance:** `opacity` + `transform` are the two GPU-composited properties — they do not
+trigger layout or paint. This is safe for 10-15 background icons simultaneously on mobile.
+
+Each icon gets a different `animationDelay` to stagger the pulse and avoid lockstep animation.
+
+---
 
 ## Alternatives Considered
 
 | Recommended | Alternative | When to Use Alternative |
 |-------------|-------------|-------------------------|
-| Firebase AI Logic (`firebase/ai`) | `@google/generative-ai` direct SDK | Only if you drop Firebase entirely — direct SDK exposes the API key in the client bundle unless you add your own proxy/backend |
-| Firebase AI Logic | Genkit + Cloud Functions | Use Genkit if you need server-side orchestration, RAG, or multi-step agentic flows — overkill for a single-prompt generator |
-| `html-to-image` | `html2canvas` | Use html2canvas when you need pixel-perfect fidelity for complex layouts with heavy CSS (e.g., gradients, filters); for a simple styled card, html-to-image is faster and has better font handling |
-| Firebase Hosting (static) | Firebase App Hosting | App Hosting is for SSR/dynamic backends and requires a billing account to start; a Vite-built SPA deploys perfectly to static Hosting on the free tier |
-| Tailwind CSS v4 | CSS Modules or styled-components | Use styled-components if the team strongly prefers CSS-in-JS and dynamic theming via props; Tailwind wins for cozy card layouts because utility classes map directly to the DLS tokens |
-| React 19 | Next.js 15 | Use Next.js if you need SSR, SEO landing pages, or API routes; this app is fully client-side and a SPA is simpler |
+| Genkit + `startFlowServer` | Firebase AI Logic `firebase/ai` client SDK | If you want zero backend process and are willing to expose the API key in the client bundle (prototyping only) |
+| Genkit + `startFlowServer` | Cloud Functions for Firebase | Same Genkit code, different deployment target — use Cloud Functions when you need auto-scaling and pay-per-call billing in production |
+| Genkit + `startFlowServer` | Direct `@google/genai` SDK on server | Works, but loses Genkit's flow observability, schema validation, and dev UI; use if Genkit feels like over-engineering |
+| `html-to-image` | `html2canvas` | Use html2canvas if the card has complex CSS filters or SVG elements that html-to-image fails to capture correctly |
+| Tailwind custom `@keyframes` | Framer Motion | Use Framer Motion if you need gesture-driven or physics-based animations, or complex sequence choreography; overkill for a simple opacity+scale pulse |
+| `concurrently` | `npm-run-all` | Either works — `concurrently` shows color-coded output per process which is easier to read when debugging server vs client logs |
 
-## What NOT to Use
+---
+
+## What NOT to Add
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| `@google/generative-ai` (direct, client-side) | Embeds the Gemini API key in the browser bundle — any user can extract it and drain your quota | `firebase/ai` via Firebase AI Logic proxy, which keeps the key server-side |
-| Genkit (for this project) | Adds significant server-side complexity (Cloud Functions, deployment pipeline) for a use case that needs one prompt call | `firebase/ai` client SDK directly |
-| html2canvas | Has known issues with custom font rendering — handwritten fonts like Caveat will often render incorrectly, which breaks the card aesthetic | `html-to-image` which handles embedded fonts more reliably via SVG foreignObject |
-| Redux / Zustand | State management overhead for an app with a single piece of mutable state (the generated compliment string) | React `useState` + `useReducer` — all state lives in one parent component |
-| Firebase App Hosting | Requires billing account, designed for SSR; adds cost and complexity with no benefit for a static SPA | Firebase Hosting (classic), which has a generous free tier and deploys Vite builds in one command |
-| Tailwind CSS v3 | v4 is the current release with a fundamentally different (simpler) setup — starting a new project on v3 means a migration cost later | Tailwind CSS v4 via `@tailwindcss/vite` |
+| `@google/generative-ai` (client-side) | Exposes the Gemini API key in the browser bundle | Genkit server with `startFlowServer` — key stays server-side |
+| Firebase AI Logic `firebase/ai` | Contradicts the project decision to use Genkit; the team specifically chose Genkit for this milestone | Genkit with `@genkit-ai/google-genai` |
+| `framer-motion` | 43 kB gzip for animations that are achievable with 6 lines of CSS keyframes | Tailwind `@theme` custom `@keyframes` |
+| `react-spring` | Same problem as Framer Motion — animation library overhead for what is a static, non-interactive background decoration | CSS `@keyframes` via Tailwind |
+| `dom-to-image` | Unmaintained since 2019; html-to-image is the maintained fork | `html-to-image` |
+| `canvas-confetti` or other celebration libs | Out of scope for v2.0; the card IS the celebration | Not needed |
 
-## Stack Patterns by Variant
-
-**For card image generation with custom fonts:**
-- Load the font via a `<link>` in `index.html` (Google Fonts), not only via Tailwind `@font-face`
-- `html-to-image` needs the font loaded on the document to capture it in the SVG foreignObject
-- Add `cacheBust: true` to `toPng()` options to avoid stale renders on regenerate
-
-**For Firebase AI Logic + App Check in production:**
-- Register reCAPTCHA v3 site key in Firebase Console
-- Initialize App Check before calling `getAI()`
-- In dev, use `firebase.appCheck().setTokenAutoRefreshEnabled(false)` + debug token to bypass
-
-**For Google Fonts handwritten typography:**
-- Caveat (Google Fonts) — best for card body text, retains readability at small sizes while feeling handwritten
-- Pacifico (Google Fonts) — best for display/headline use on the card, the 1950s surf script feel pairs well with "dramatic compliment" tone
-- Load both via Google Fonts `<link>` in `index.html`; reference in Tailwind v4 via CSS custom properties
+---
 
 ## Version Compatibility
 
-| Package A | Compatible With | Notes |
-|-----------|-----------------|-------|
-| firebase@12.10.0 | React 19 | No known conflicts; Firebase JS SDK is framework-agnostic |
-| tailwindcss@4.2.1 | Vite@8 | Requires `@tailwindcss/vite` plugin — do NOT use PostCSS-only config |
-| html-to-image@1.11.13 | React 19 | Uses DOM refs directly; works with any React version |
-| react-hook-form@7.71.2 | React 19 | v7 officially supports React 18+; React 19 compatible per community reports |
-| lucide-react@0.577.0 | React 19 | Ships as ESM; tree-shakeable; no peer dep conflicts |
+| Package | Compatible With | Notes |
+|---------|-----------------|-------|
+| `genkit@1.30.1` | Node.js 20+ | Requires Node 20 minimum; check `.nvmrc` or `engines` field |
+| `genkit@1.30.1` | React 19 (client-only) | Client calls use `genkit/beta/client` which is browser-safe; never import main `genkit` package in React components |
+| `@genkit-ai/express@1.30.1` | `genkit@1.30.1` | Must match — all `@genkit-ai/*` packages version-lock to `genkit` core |
+| `@genkit-ai/google-genai@1.30.1` | `genkit@1.30.1` | Must match — same version-lock rule |
+| `html-to-image@1.11.13` | React 19 | Uses DOM refs; React version agnostic |
+| `tsx@4.21.0` | TypeScript 5.9 | Transpiles TS in-process; no tsconfig changes needed for the server file |
+| `concurrently@9.2.1` | any npm | Dev-only; no runtime conflicts |
+
+---
+
+## Environment Variables
+
+```bash
+# .env.local — required for Genkit server
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# PORT is optional — Genkit defaults to 3400
+# PORT=3400
+```
+
+The `GEMINI_API_KEY` is read by `@genkit-ai/google-genai` automatically from the environment.
+It stays on the server — never in the React bundle.
+
+---
 
 ## Sources
 
-- Firebase official docs (firebase.google.com/docs/ai-logic/get-started) — verified `firebase/ai` import path, `getAI()` + `getGenerativeModel()` API, App Check integration
-- npm registry (cli) — verified firebase@12.10.0, react@19.2.4, vite@8.0.0, tailwindcss@4.2.1, html-to-image@1.11.13, lucide-react@0.577.0, react-hook-form@7.71.2 (HIGH confidence)
-- Tailwind CSS official blog (tailwindcss.com/blog/tailwindcss-v4) — verified v4 Vite plugin setup, zero-config approach (HIGH confidence)
-- Better Programming / npm-compare.com — html-to-image vs html2canvas comparison, font rendering advantage (MEDIUM confidence — community sources, but consistent)
-- Firebase blog (firebase.blog/posts/2025/05/building-ai-apps) — Firebase AI Logic vs Genkit use case boundary (MEDIUM confidence)
-- Firebase Hosting docs — static SPA vs App Hosting recommendation (HIGH confidence — direct from official comparison page)
+- npm registry (cli) — `genkit@1.30.1`, `@genkit-ai/google-genai@1.30.1`, `@genkit-ai/express@1.30.1`, `html-to-image@1.11.13`, `tsx@4.21.0`, `concurrently@9.2.1` — HIGH confidence (verified via `npm show`)
+- genkit.dev/docs/js/get-started/ — Genkit minimal setup, package requirements, flow definition pattern — HIGH confidence (official docs)
+- genkit.dev/docs/deployment/any-platform/ — `startFlowServer` API, default port 3400, CORS options — HIGH confidence (official docs)
+- genkit.dev/docs/integrations/google-genai/ — `googleAI()` plugin setup, `gemini-2.0-flash` model selector — HIGH confidence (official docs)
+- tailwindcss.com/docs/animation — Tailwind v4 `@theme` custom `@keyframes` and `--animate-*` variable syntax — HIGH confidence (official docs)
+- github.com/bubkoo/html-to-image/issues/213 — `document.fonts.ready` + font embedding status — MEDIUM confidence (open issue, workaround community-verified)
+- github.com/bubkoo/html-to-image/issues/412 — localhost font embedding failure and `preferredFontFormat` workaround — MEDIUM confidence (open issue, confirmed working by multiple reporters)
+- genkit.dev deploy docs + WebSearch cross-reference — "no Cloud Functions" architecture interpretation (startFlowServer as local Node process) — HIGH confidence
 
 ---
-*Stack research for: EgoBoost 3000 — React + Firebase AI-powered compliment card generator*
-*Researched: 2026-03-13*
+*Stack research for: EgoBoost 3000 — v2.0 new capability additions*
+*Researched: 2026-03-14*

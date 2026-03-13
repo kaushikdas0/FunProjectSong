@@ -1,264 +1,446 @@
 # Architecture Research
 
 **Domain:** AI-powered compliment card generator (React + Firebase + Gemini Flash)
-**Researched:** 2026-03-13
-**Confidence:** HIGH (Firebase AI Logic official docs, multiple verified sources)
+**Researched:** 2026-03-14 (updated for v2.0 milestone)
+**Confidence:** HIGH (Firebase AI Logic official docs, html-to-image GitHub, multiple verified sources)
 
-## Standard Architecture
+---
 
-### System Overview
+## Milestone Context
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Browser / Client                         │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌──────────────┐  ┌────────────────────┐  │
-│  │  DLS Layer  │  │  App Shell   │  │   Card Preview     │  │
-│  │  (tokens,   │  │  (name input,│  │   (styled card     │  │
-│  │   fonts,    │  │   generate   │  │    + download      │  │
-│  │   theme)    │  │   button)    │  │    trigger)        │  │
-│  └─────────────┘  └──────┬───────┘  └────────┬───────────┘  │
-│                          │                   │              │
-│              ┌───────────▼───────────────────▼──────────┐   │
-│              │           React State Layer               │   │
-│              │  (compliment text, loading, error state)  │   │
-│              └───────────────────┬───────────────────────┘   │
-│                                  │                           │
-│              ┌───────────────────▼───────────────────────┐   │
-│              │         Firebase AI Logic SDK              │   │
-│              │   (proxy layer — API key never in client)  │   │
-│              └───────────────────┬───────────────────────┘   │
-└──────────────────────────────────┼───────────────────────────┘
-                                   │ HTTPS (through Firebase proxy)
-┌──────────────────────────────────▼───────────────────────────┐
-│                    Firebase Infrastructure                     │
-├────────────────────┬─────────────────────────────────────────┤
-│  Firebase Hosting  │  Firebase AI Logic Proxy (API key mgmt)  │
-│  (static React SPA)│  └──→ Gemini Flash API (Google Cloud)    │
-└────────────────────┴─────────────────────────────────────────┘
-```
+This document covers how five new features integrate with the existing v1.0 architecture:
 
-### Component Responsibilities
+1. Genkit / Firebase AI Logic — name → AI compliment
+2. Screen routing — home → generating → result (UI states, not URL routes)
+3. html-to-image — capturing `ComplimentCard` as PNG
+4. Animated icon background layer — pixelarticons with CSS animation
+5. API key handling and overall data flow
 
-| Component | Responsibility | Typical Implementation |
-|-----------|----------------|------------------------|
-| DLS Layer | Design tokens, typography scale, color palette, spacing constants | CSS custom properties or JS theme object; loaded globally |
-| App Shell | Name input form, generate trigger, loading/error state orchestration | Single React component with local useState |
-| Firebase AI Logic SDK | Proxy calls to Gemini Flash; keeps API key server-side | `@firebase/ai` package initialized at app root |
-| Card Preview | Renders styled compliment card for display AND image capture | A `div` with `ref`; styled to match downloadable output |
-| Image Export | Captures Card Preview DOM node, converts to PNG, triggers download | `html-to-image` library + blob/anchor download |
-| Kitchen Sink Screen | Isolated DLS validation — all tokens, fonts, colors in one view | Dev-only route; confirms visual consistency before feature build |
+**Existing foundation (do not change):**
+- `src/App.tsx` — BrowserRouter, `/` → MainScreen, `/kitchen-sink` → KitchenSinkScreen (dev only)
+- `src/screens/MainScreen.tsx` — placeholder, will be replaced with full feature composition
+- `src/components/Card/ComplimentCard.tsx` — accepts `name` + `compliment` props, pure renderer
+- `src/components/Icon/Icon.tsx` — wraps pixelarticons, size must be multiples of 24
+- `src/dls/index.css` — Tailwind v4 + CSS @theme block (tokens, typography)
 
-## Recommended Project Structure
+---
+
+## System Overview
 
 ```
-src/
-├── dls/                    # Design Language System — built first
-│   ├── tokens.css          # CSS custom properties (colors, spacing, radii)
-│   ├── typography.css      # Font imports, type scale definitions
-│   ├── theme.ts            # JS-side token references for dynamic use
-│   └── index.ts            # Re-exports for clean imports
-│
-├── components/             # Shared DLS primitive components
-│   ├── Button/
-│   ├── TextInput/
-│   └── Card/               # Base card shell (not the compliment card)
-│
-├── features/
-│   └── compliment/         # All compliment-generation logic lives here
-│       ├── ComplimentForm.tsx      # Name input + generate button
-│       ├── ComplimentCard.tsx      # The styled output card (ref-forwarded)
-│       ├── useCompliment.ts        # Hook: calls Firebase AI Logic, manages state
-│       └── downloadCard.ts        # html-to-image capture + download trigger
-│
-├── screens/
-│   ├── MainScreen.tsx      # Composes ComplimentForm + ComplimentCard
-│   └── KitchenSinkScreen.tsx  # DLS validation — dev only
-│
-├── firebase/
-│   └── ai.ts               # Firebase app init + AI Logic SDK instance
-│
-├── App.tsx                 # Router (main + kitchensink routes)
-└── main.tsx                # Entry point
+┌─────────────────────────────────────────────────────────────────┐
+│                         Browser / Client                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │                     MainScreen                            │   │
+│  │  (owns UI state machine: idle → generating → result)      │   │
+│  │                                                            │   │
+│  │  ┌────────────────────┐   ┌──────────────────────────┐   │   │
+│  │  │   NameInputForm    │   │     ResultView           │   │   │
+│  │  │  (name input +     │   │  (ComplimentCard +       │   │   │
+│  │  │   generate button) │   │   download button +      │   │   │
+│  │  └────────────────────┘   │   regenerate button)     │   │   │
+│  │                           └──────────────────────────┘   │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │                 AnimatedIconBackground                     │   │
+│  │  (fixed layer, z-index behind card, CSS keyframe anim)    │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │               useCompliment hook                          │   │
+│  │  state: { phase, name, compliment, error }                │   │
+│  │  action: generate(name) → Firebase AI Logic → text        │   │
+│  └──────────────────────────────┬───────────────────────────┘   │
+│                                  │                               │
+│  ┌───────────────────────────────▼───────────────────────────┐  │
+│  │               Firebase AI Logic SDK (firebase/ai)          │  │
+│  │   API key NEVER in client bundle — Firebase proxy handles  │  │
+│  └───────────────────────────────┬───────────────────────────┘  │
+└──────────────────────────────────┼──────────────────────────────┘
+                                   │ HTTPS through Firebase proxy
+┌──────────────────────────────────▼──────────────────────────────┐
+│              Firebase AI Logic Proxy → Gemini Flash API          │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Structure Rationale
+---
 
-- **dls/:** Isolated first — everything else depends on it. CSS custom properties ensure tokens work inside `html-to-image` capture (unlike JS-in-CSS solutions that don't serialize).
-- **features/compliment/:** Single feature, so one feature folder. `useCompliment` hook owns the AI call and state; components are dumb renderers.
-- **firebase/ai.ts:** One initialization point. Firebase AI Logic SDK instance is a singleton created here and imported where needed.
-- **screens/:** Thin composition layer — screens import features, features import components, components import DLS. One-way dependency flow.
+## Feature Integration Analysis
 
-## Architectural Patterns
+### 1. Genkit vs Firebase AI Logic — Use Firebase AI Logic
 
-### Pattern 1: Firebase AI Logic Client SDK (not Cloud Functions)
+**Decision: Use Firebase AI Logic client SDK (`firebase/ai`), not Genkit.**
 
-**What:** Call Gemini directly from the React client via Firebase AI Logic's proxy SDK. No custom Cloud Function required for this use case.
+Genkit runs on Node.js only. It cannot execute in the browser. Using it would require deploying a Cloud Function or Express server — which contradicts the project constraint "no Cloud Functions needed."
 
-**When to use:** Simple request/response AI calls with no server-side business logic. The project generates one compliment per name — no orchestration needed.
+Firebase AI Logic is the correct path: it is a client SDK that calls Gemini directly from the browser through Firebase's proxy, which keeps the API key server-side without any custom backend code.
 
-**Trade-offs:** Simpler (no Cloud Function to write/deploy/maintain). Firebase handles API key security via their proxy. The downside is less control over prompt manipulation server-side, but for this project that is not needed.
+**Confidence:** HIGH — confirmed by Firebase official docs.
 
-**Example:**
+**Integration with existing codebase:**
+- New file: `src/firebase/ai.ts` — Firebase app init + model instance (singleton)
+- New hook: `src/hooks/useCompliment.ts` — calls the model, manages loading/error state
+- `MainScreen.tsx` imports and calls `useCompliment`
+- No changes to App.tsx, DLS, Icon, or ComplimentCard
+
+**API key handling:**
+The Firebase project config (`firebaseConfig` object) contains a `apiKey` field that identifies your Firebase project. This is safe to include in client code — it identifies the project, not your Gemini API key. The actual Gemini API key lives only in Firebase's infrastructure. Use Vite environment variables (`import.meta.env.VITE_FIREBASE_API_KEY` etc.) to keep the config out of source control.
+
 ```typescript
-// firebase/ai.ts
+// src/firebase/ai.ts
 import { initializeApp } from 'firebase/app';
-import { getAI, getGenerativeModel } from 'firebase/ai';
+import { getAI, getGenerativeModel, GoogleAIBackend } from 'firebase/ai';
+
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  // ...
+};
 
 const app = initializeApp(firebaseConfig);
-const ai = getAI(app);
+const ai = getAI(app, { backend: new GoogleAIBackend() });
 export const model = getGenerativeModel(ai, { model: 'gemini-2.0-flash' });
-
-// features/compliment/useCompliment.ts
-import { model } from '../../firebase/ai';
-
-export function useCompliment() {
-  const [text, setText] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  async function generate(name: string) {
-    setLoading(true);
-    const prompt = `Write an absurdly dramatic, over-the-top compliment for someone named ${name}...`;
-    const result = await model.generateContent(prompt);
-    setText(result.response.text());
-    setLoading(false);
-  }
-
-  return { text, loading, generate };
-}
 ```
 
-### Pattern 2: Ref-Forwarded Card for DOM Capture
+---
 
-**What:** The visible compliment card component forwards a `ref` to its root DOM node. The download function receives that ref and passes it to `html-to-image`.
+### 2. Screen Routing — UI State Machine, Not URL Routes
 
-**When to use:** Any time you need pixel-accurate capture of a styled React component as a PNG. The card must look identical on screen and in the downloaded image.
+**Decision: A `phase` state variable in `MainScreen`, not new React Router routes.**
 
-**Trade-offs:** Works well with CSS custom properties (tokens serialize correctly). Fails with cross-origin images or certain CSS effects (box-shadow on some browsers). Keep card styles to standard CSS — no filters or blend modes that `html-to-image` can't replicate.
+The transitions (idle → generating → result → idle) are app state, not navigable URLs. Users should not be able to deep-link to `/generating` or `/result`. Browser back button should go back to idle from the previous URL, not between app phases. Adding URL routes for these states would require React Router state restoration on refresh, which adds complexity for zero benefit.
 
-**Example:**
+**Integration with existing codebase:**
+- `MainScreen.tsx` is already the `/` route — it expands from placeholder to a stateful component
+- `App.tsx` is unchanged — no new routes
+- The state machine lives entirely inside `MainScreen` (or in `useCompliment` hook)
+
+**State shape:**
 ```typescript
-// features/compliment/ComplimentCard.tsx
-export const ComplimentCard = forwardRef<HTMLDivElement, Props>(
-  ({ name, compliment }, ref) => (
-    <div ref={ref} className="compliment-card">
-      <p className="card-compliment">{compliment}</p>
-      <p className="card-name">— for {name}</p>
-    </div>
-  )
-);
+type Phase = 'idle' | 'generating' | 'result' | 'error';
 
-// features/compliment/downloadCard.ts
-import { toPng } from 'html-to-image';
+// In useCompliment hook
+const [phase, setPhase] = useState<Phase>('idle');
+const [compliment, setCompliment] = useState('');
+const [error, setError] = useState<string | null>(null);
+```
 
-export async function downloadCard(ref: RefObject<HTMLDivElement>, name: string) {
-  if (!ref.current) return;
-  const dataUrl = await toPng(ref.current, { pixelRatio: 2 }); // 2x for retina
+**Phase transitions:**
+```
+idle       — user sees name input + generate button
+    ↓ generate(name)
+generating — loading spinner, generate button disabled
+    ↓ success
+result     — ComplimentCard visible, download + regenerate buttons
+    ↓ regenerate()
+generating — (loops back)
+    ↓ error at any point
+error      — friendly message + retry button → returns to idle
+```
+
+The `AnimatedIconBackground` renders in ALL phases — it is always visible behind the card area.
+
+---
+
+### 3. html-to-image — Card PNG Download
+
+**Decision: `html-to-image` library, `toPng()` function, with `forwardRef` on ComplimentCard.**
+
+**Integration with existing codebase:**
+- `ComplimentCard.tsx` needs modification: add `forwardRef` to expose its root `div` ref
+- New utility: `src/utils/downloadCard.ts` — calls `toPng()` and triggers download
+- Download button in `ResultView` calls `downloadCard(cardRef, name)`
+
+**Font capture requirement (self-hosted Caveat):**
+This is the most fragile part of the download flow. `html-to-image` discovers fonts via `@font-face` rules in `<style>` tags. Since Caveat is loaded via `@fontsource/caveat` (which injects a `<style>` tag via CSS import), it should be discoverable. However, there is a known issue where the first call to `toPng()` sometimes renders without fonts because the library's internal fetch of the font file hasn't completed.
+
+**Proven workaround — call `toPng()` twice:**
+The first call warms the font cache; the second call uses the cached font. This is an established workaround in the html-to-image community (confirmed in issue discussions). Alternatively, use `getFontEmbedCSS()` once upfront and pass the result to `toPng()`:
+
+```typescript
+// src/utils/downloadCard.ts
+import { toPng, getFontEmbedCSS } from 'html-to-image';
+
+export async function downloadCard(
+  node: HTMLDivElement,
+  name: string
+): Promise<void> {
+  // Await fonts before capture
+  await document.fonts.ready;
+
+  // Warm the font embed cache — prevents blank-font first render
+  const fontEmbedCSS = await getFontEmbedCSS(node);
+
+  const dataUrl = await toPng(node, {
+    pixelRatio: 2,   // Retina output
+    fontEmbedCSS,    // Pre-resolved — no second fetch
+  });
+
   const link = document.createElement('a');
-  link.download = `compliment-for-${name}.png`;
+  link.download = `compliment-for-${name.toLowerCase().replace(/\s+/g, '-')}.png`;
   link.href = dataUrl;
   link.click();
 }
 ```
 
-### Pattern 3: DLS-First with Kitchen Sink Screen
+**ComplimentCard modification:**
+```typescript
+// src/components/Card/ComplimentCard.tsx
+import { forwardRef } from 'react';
 
-**What:** Build the full design token system and primitive components before any feature work. Validate it on a `/kitchen-sink` route that renders every token, font, and component variant.
-
-**When to use:** Any project with a strong visual identity where consistency across components matters. Especially important when the card download must match the on-screen card.
-
-**Trade-offs:** Adds 1 phase of front-loaded work but eliminates visual drift later. The kitchen sink screen also serves as a permanent visual regression reference — if it looks right there, it will look right everywhere.
-
-## Data Flow
-
-### Request Flow (Compliment Generation)
-
-```
-User types name → submits form
-    ↓
-ComplimentForm calls generate(name) from useCompliment hook
-    ↓
-useCompliment sets loading=true → calls model.generateContent(prompt)
-    ↓
-Firebase AI Logic SDK → Firebase Proxy → Gemini Flash API
-    ↓
-Response streams back → useCompliment sets text, loading=false
-    ↓
-ComplimentCard renders with new text
-    ↓
-User sees card → clicks Download
-    ↓
-downloadCard(ref, name) → html-to-image captures DOM node → PNG blob
-    ↓
-Anchor click triggers browser file download
+export const ComplimentCard = forwardRef<HTMLDivElement, ComplimentCardProps>(
+  ({ name, compliment }, ref) => (
+    <div ref={ref} className="bg-cream-50 rounded-card ...">
+      {/* existing markup unchanged */}
+    </div>
+  )
+);
 ```
 
-### State Management
+This is a minimal change — the component still accepts the same props. The only addition is `forwardRef` wrapping and the `ref` forwarded to the root div.
 
-This app is intentionally stateless and has minimal state. No global store needed.
+---
+
+### 4. Animated Icon Background
+
+**Decision: Fixed-position CSS-animated layer, z-index below card, pure CSS keyframes, no JS animation.**
+
+**Integration with existing codebase:**
+- New component: `src/components/AnimatedIconBackground/AnimatedIconBackground.tsx`
+- Uses existing `Icon` component (already imports pixelarticons)
+- CSS keyframe animation defined in a new CSS file or inline `<style>` block
+- Placed inside `MainScreen.tsx` as a sibling to the card content, positioned to fill the viewport
+
+**Z-index strategy:**
+```
+z-index: 0  — page background (cream color)
+z-index: 1  — AnimatedIconBackground (icons layer)
+z-index: 2  — card + form content (always on top)
+```
+
+The `MainScreen` wrapper uses `position: relative` so z-index values are contained to the screen stacking context.
+
+**Icon placement approach:**
+Scatter 8-12 icon instances across the background using absolute or fixed positioning with percentage-based coordinates. Each icon gets:
+- A random-ish position (predefined constants, not runtime random — avoids re-render flicker)
+- An opacity between 0.08–0.15 (subtle, not distracting)
+- A colored fill using DLS token colors (text-blue-200, text-coral-200, etc.)
+- A CSS `@keyframes` animation for a gentle pulse (scale 1 → 1.05 → 1 + subtle opacity shift)
+- Staggered `animation-delay` values so they pulse out of sync
+
+**Performance considerations:**
+- Use `transform` and `opacity` in keyframes only — these are GPU-composited properties and do not trigger layout recalculation
+- Avoid animating `width`, `height`, `top`, `left` — these cause expensive repaints
+- `will-change: transform` on each icon div signals the browser to promote to compositor layer
+- 8-12 elements is well within safe range for smooth animation on mobile
+
+**Example structure:**
+```typescript
+// src/components/AnimatedIconBackground/AnimatedIconBackground.tsx
+const ICONS = [
+  { name: 'brand',      x: '8%',  y: '12%', color: 'text-blue-200',  delay: '0s'    },
+  { name: 'decorative', x: '85%', y: '8%',  color: 'text-coral-200', delay: '0.8s'  },
+  { name: 'generate',   x: '15%', y: '75%', color: 'text-blue-300',  delay: '1.6s'  },
+  // ... more entries
+] as const;
+
+export function AnimatedIconBackground() {
+  return (
+    <div className="fixed inset-0 z-[1] pointer-events-none overflow-hidden">
+      {ICONS.map((icon, i) => (
+        <div
+          key={i}
+          className="absolute animate-icon-pulse"
+          style={{ left: icon.x, top: icon.y, animationDelay: icon.delay }}
+        >
+          <Icon name={icon.name} size={48} className={`${icon.color} opacity-10`} />
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+CSS animation defined in the DLS or a component-scoped stylesheet:
+```css
+@keyframes icon-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.10; }
+  50%       { transform: scale(1.06); opacity: 0.15; }
+}
+.animate-icon-pulse {
+  animation: icon-pulse 4s ease-in-out infinite;
+  will-change: transform;
+}
+```
+
+Note: Tailwind v4 supports arbitrary `animation` values and custom keyframes via the CSS `@theme` block. Define `animate-icon-pulse` there rather than a separate file to keep DLS consolidated.
+
+**The animated background is EXCLUDED from card download.** The card ref points only to the `ComplimentCard` div, not the full screen. `html-to-image` captures only what's inside the ref'd node. The background icons are siblings in the DOM, not children of the card.
+
+---
+
+### 5. API Key — Where It Lives
+
+| Key | Where | How |
+|-----|-------|-----|
+| Firebase project config (`VITE_FIREBASE_*`) | `.env` file, Vite env vars | Safe in client — identifies project, not Gemini billing key |
+| Gemini API key | Firebase infrastructure (never client) | Firebase AI Logic proxy holds it; SDK never exposes it |
+
+Create a `.env` file at project root (add to `.gitignore`). Vite automatically loads it:
 
 ```
-Local useState in useCompliment hook:
-  - name: string         (controlled input)
-  - compliment: string   (AI response)
-  - loading: boolean     (spinner state)
-  - error: string | null (error display)
-
-No Firestore, no user sessions, no persistence.
+VITE_FIREBASE_API_KEY=AIza...
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project
+VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=1:123...
 ```
 
-### Key Data Flows
+---
 
-1. **Generation flow:** Name string → Gemini prompt → compliment text string. All client-side via Firebase AI Logic SDK. Synchronous from UI perspective (async behind hook).
-2. **Download flow:** DOM ref → html-to-image → PNG data URL → anchor download. Entirely browser-side, no server involved.
-3. **DLS flow:** CSS tokens defined in `dls/tokens.css` → consumed by component stylesheets → serialized into PNG by html-to-image at download time. CSS custom properties survive DOM capture correctly.
+## Recommended File Structure (New + Modified)
+
+```
+src/
+├── dls/                         # EXISTING — unchanged
+│   ├── tokens.css
+│   ├── typography.css
+│   └── index.css                # Add @keyframes for icon-pulse animation here
+│
+├── components/
+│   ├── Card/
+│   │   └── ComplimentCard.tsx   # MODIFY — add forwardRef
+│   ├── Icon/
+│   │   └── Icon.tsx             # EXISTING — unchanged
+│   └── AnimatedIconBackground/
+│       └── AnimatedIconBackground.tsx  # NEW
+│
+├── firebase/
+│   └── ai.ts                    # NEW — Firebase app init + model singleton
+│
+├── hooks/
+│   └── useCompliment.ts         # NEW — phase state machine + AI call
+│
+├── utils/
+│   └── downloadCard.ts          # NEW — html-to-image capture + download trigger
+│
+├── screens/
+│   ├── MainScreen.tsx           # REPLACE — expand from placeholder to full feature
+│   └── KitchenSinkScreen.tsx    # EXISTING — add AnimatedIconBackground preview
+│
+├── App.tsx                      # EXISTING — unchanged
+└── main.tsx                     # EXISTING — unchanged
+```
+
+**Change summary:**
+- 5 new files: `firebase/ai.ts`, `hooks/useCompliment.ts`, `utils/downloadCard.ts`, `components/AnimatedIconBackground/AnimatedIconBackground.tsx`
+- 2 modified files: `ComplimentCard.tsx` (add forwardRef), `MainScreen.tsx` (replace placeholder)
+- 0 changed: App.tsx, main.tsx, all DLS files (except adding keyframe CSS), Icon.tsx
+
+---
+
+## Data Flow: Name Input to Card Download
+
+```
+1. User types name in NameInputForm
+       ↓
+2. Clicks "Generate" → useCompliment.generate(name) called
+       ↓
+3. phase → 'generating', loading UI shown
+       ↓
+4. firebase/ai.ts model.generateContent(prompt) called
+       ↓
+5. Firebase AI Logic SDK → Firebase proxy → Gemini Flash API
+       ↓
+6. Response text returned → phase → 'result', compliment stored in state
+       ↓
+7. ComplimentCard renders with name + compliment
+   TypewriterText component animates compliment text character by character
+       ↓
+8. User clicks "Download"
+       ↓
+9. await document.fonts.ready (ensure Caveat loaded)
+   getFontEmbedCSS(cardRef.current) called (warm font cache)
+   toPng(cardRef.current, { pixelRatio: 2, fontEmbedCSS }) called
+       ↓
+10. PNG data URL → anchor element .click() → browser file download
+```
+
+---
+
+## Typewriter Animation
+
+**Decision: Custom `useTypewriter` hook using `useState` + `useEffect`, no library needed.**
+
+The animation is simple — append one character every N milliseconds. A custom hook is 15 lines of code and has zero dependencies. Libraries like `react-type-animation` add 20KB+ for equivalent functionality.
+
+The typewriter text renders inside `ComplimentCard` — but the downloaded PNG should show the COMPLETE text (not mid-animation). Two options:
+
+- **Option A (recommended):** The `ComplimentCard` component always renders the full `compliment` prop. A separate `TypewriterText` overlay or wrapper outside the card handles the animation for the on-screen preview. Download captures the card which has the full text.
+- **Option B:** Pass a `displayText` prop to the card (the partially-typed string) and update it as animation progresses. When the animation completes, `displayText === compliment`. Download is only enabled after animation completes.
+
+Option A is cleaner because `ComplimentCard` stays a pure renderer with no animation logic. The card ref always captures complete text regardless of animation state.
+
+---
 
 ## Scaling Considerations
 
 | Scale | Architecture Adjustments |
 |-------|--------------------------|
-| 0-1k users | Current architecture is sufficient — Firebase AI Logic proxy scales automatically |
-| 1k-100k users | Add Firebase App Check to prevent API key abuse by bots; monitor Gemini API quota |
-| 100k+ users | Rate limiting via Cloud Functions wrapper; Firestore for request logging; potentially move to Genkit for server-side orchestration |
+| 0-1k users | Current architecture sufficient — Firebase AI Logic proxy auto-scales |
+| 1k-100k users | Add Firebase App Check (reCAPTCHA) to prevent API key abuse; monitor Gemini quota |
+| 100k+ users | Rate limiting via Cloud Functions wrapper; switch to Vertex AI backend for higher quotas |
 
-### Scaling Priorities
-
-1. **First bottleneck:** Gemini API quota. Firebase AI Logic uses Google AI backend by default; Vertex AI backend has higher quotas. Switch the AI backend if quota limits hit — same SDK, different initialization.
-2. **Second bottleneck:** Bot abuse of the generation endpoint. Firebase App Check (reCAPTCHA) prevents unauthorized callers. Add this before any public launch.
+---
 
 ## Anti-Patterns
 
-### Anti-Pattern 1: Cloud Function Middleman for Simple AI Calls
+### Anti-Pattern 1: Using Genkit Instead of Firebase AI Logic
 
-**What people do:** Write a Cloud Function that receives the name, calls Gemini, returns the compliment.
+**What people do:** Follow Genkit tutorials, set up a Cloud Function to run Genkit flows, call the function from the client.
 
-**Why it's wrong:** Adds cold-start latency (200-2000ms per call), extra deployment complexity, and a billing surface — for no security benefit. Firebase AI Logic already proxies the API key without a custom function.
+**Why it's wrong:** Adds cold-start latency, a separate deployment step, and Cloud Function billing — for no benefit on a simple one-prompt app. Genkit runs Node.js only; it cannot run in the browser.
 
-**Do this instead:** Use Firebase AI Logic SDK directly from the React client. Reserve Cloud Functions for cases where server-side logic is genuinely needed (rate limiting, auth-gated actions, multi-step pipelines).
+**Do this instead:** Firebase AI Logic SDK calls Gemini directly from the browser through a Firebase-managed proxy. No Cloud Function needed.
 
-### Anti-Pattern 2: Rendering the Card Differently for Download
+### Anti-Pattern 2: New React Router Routes for Loading/Result States
 
-**What people do:** Build the on-screen card in React JSX and a separate canvas-based version for download.
+**What people do:** Create `/generating` and `/result` routes to show different screens during generation.
 
-**Why it's wrong:** Two rendering paths immediately diverge. Fonts, spacing, and colors drift. Double the work to maintain.
+**Why it's wrong:** Users can refresh `/generating` and see a broken state. The browser back button navigates to `/generating` instead of the home page. Deep links to intermediate states don't make sense.
 
-**Do this instead:** One `ComplimentCard` component with a forwarded ref. `html-to-image` captures exactly what the user sees. The DLS tokens (CSS custom properties) serialize correctly into the captured image.
+**Do this instead:** A `phase` state variable in `MainScreen` (or `useCompliment` hook). React conditionally renders the right UI. The URL stays `/` throughout.
 
-### Anti-Pattern 3: Embedding API Key in Client Code
+### Anti-Pattern 3: Animating Icon Background with JavaScript
 
-**What people do:** Call Gemini directly via `fetch` with an API key in the JavaScript bundle.
+**What people do:** Use `requestAnimationFrame` or `setInterval` to update icon positions/opacity in React state.
 
-**Why it's wrong:** The key is publicly visible in the browser. Anyone can extract it and run up your bill.
+**Why it's wrong:** Every state update re-renders the component tree. 12 icons animating at 60fps = thousands of re-renders per second. Kills performance, especially on mobile.
 
-**Do this instead:** Firebase AI Logic SDK — the API key lives in Firebase's proxy layer, never in your client bundle.
+**Do this instead:** CSS `@keyframes` with `animation` property. The browser compositor handles animation entirely off the React render cycle. GPU-composited `transform` and `opacity` animate without triggering layout.
 
-### Anti-Pattern 4: Skipping the Kitchen Sink Phase
+### Anti-Pattern 4: Capturing Full Screen Instead of Card Ref
 
-**What people do:** Build the feature first, style it later, "refactor to DLS after."
+**What people do:** Point `html-to-image` at `document.body` or a full-page wrapper.
 
-**Why it's wrong:** The card download output is the core deliverable. If the DLS isn't established first, the card will be styled ad-hoc and will look inconsistent in the downloaded image (where you can't fix it with browser dev tools).
+**Why it's wrong:** Download captures the background, navigation, animated icons, and browser chrome artifacts.
 
-**Do this instead:** Build and validate the DLS (tokens, fonts, primitives) on the kitchen sink screen before touching the compliment feature. The feature should assemble DLS pieces, not invent new styles.
+**Do this instead:** Forward a `ref` to the `ComplimentCard` root div only. `toPng(cardRef.current)` captures exactly the card with its white/cream background — clean, portable, shareable.
+
+### Anti-Pattern 5: Skipping `document.fonts.ready` Before PNG Export
+
+**What people do:** Call `toPng()` immediately on button click.
+
+**Why it's wrong:** If Caveat font hasn't finished loading (rare but possible on slow connections), the card renders with system fallback fonts in the PNG.
+
+**Do this instead:** `await document.fonts.ready` before calling `toPng()`. Additionally, use `getFontEmbedCSS(node)` to pre-embed the font in the capture rather than relying on the library's internal CSS fetch.
+
+---
 
 ## Integration Points
 
@@ -266,43 +448,65 @@ No Firestore, no user sessions, no persistence.
 
 | Service | Integration Pattern | Notes |
 |---------|---------------------|-------|
-| Gemini Flash API | Firebase AI Logic client SDK (`@firebase/ai`) | Never direct REST calls — use the SDK for API key security |
-| Firebase Hosting | Static SPA deployment via `firebase deploy` | Single-page app with `rewrites` to `index.html` in `firebase.json` |
-| Google Fonts (or self-hosted) | CSS `@import` in `typography.css` | Self-host fonts for offline card capture reliability; Google Fonts CDN can fail inside `html-to-image` capture |
+| Gemini Flash via Firebase AI Logic | `firebase/ai` SDK, singleton model instance | API key never in client; Firebase proxy handles auth |
+| Firebase Hosting | `firebase deploy` static SPA | Requires `firebase.json` with SPA rewrite to `index.html` |
 
 ### Internal Boundaries
 
 | Boundary | Communication | Notes |
 |----------|---------------|-------|
-| DLS -> Components | CSS custom properties + import of theme.ts | Components never define raw color/spacing values |
-| Components -> Features | Props only — components are stateless | No hook calls inside DLS primitives |
-| Features -> Firebase | Import singleton from `firebase/ai.ts` | One initialization, imported where needed |
-| Feature -> Download | Ref passed from feature to download utility function | Keeps DOM capture logic out of the component |
-| Screens -> Features | Composition — screens import and arrange features | Screens own no logic, only layout |
+| `useCompliment` → Firebase model | Import singleton from `firebase/ai.ts` | One init, reused across hook calls |
+| `useCompliment` → `MainScreen` | Hook return values (phase, compliment, name, error, actions) | MainScreen is the only consumer |
+| `MainScreen` → `ComplimentCard` | Props (name, compliment) | Card is a pure renderer, no state |
+| `MainScreen` → `downloadCard` | Passes `cardRef.current` + `name` | DOM capture decoupled from component |
+| `ComplimentCard` → `Icon` | Props (name, size, className) | Icon is a pure renderer |
+| `AnimatedIconBackground` → `Icon` | Props (name, size, className, color via className) | Background imports same Icon component |
+| DLS tokens → all components | CSS custom properties via Tailwind v4 classes | Tokens survive `html-to-image` capture |
 
-## Build Order Implications
+---
 
-The dependencies between components dictate this build order:
+## Build Order (Dependency-Aware)
 
-1. **DLS layer first** — everything downstream depends on it. Tokens, fonts, primitive components. Validate on Kitchen Sink screen.
-2. **Firebase initialization** — `firebase/ai.ts` setup; test that Gemini responds to a raw prompt before any UI.
-3. **`useCompliment` hook** — AI logic isolated, testable without UI.
-4. **`ComplimentCard` component** — pure rendering, no AI logic. Build with mock compliment text.
-5. **`downloadCard` utility** — integrate `html-to-image`; confirm fonts and tokens capture correctly.
-6. **`ComplimentForm` + `MainScreen`** — wire everything together.
-7. **Firebase Hosting deployment** — deploy and smoke-test end-to-end.
+Dependencies flow downward. Build from the bottom up.
+
+```
+Level 1 (no dependencies):
+  firebase/ai.ts          — Firebase init, model export
+  utils/downloadCard.ts   — html-to-image utility, no React deps
+
+Level 2 (depends on Level 1 or existing components):
+  ComplimentCard.tsx      — MODIFY: add forwardRef (depends on Icon, DLS)
+  AnimatedIconBackground  — NEW: depends on Icon, DLS tokens
+  hooks/useCompliment.ts  — NEW: depends on firebase/ai.ts
+
+Level 3 (depends on Level 2):
+  MainScreen.tsx          — REPLACE: depends on all Level 2 items
+
+Level 4 (validation):
+  KitchenSinkScreen.tsx   — ADD: AnimatedIconBackground preview panel
+```
+
+**Practical build sequence:**
+
+1. Firebase project setup + `firebase/ai.ts` — verify Gemini responds before any UI work
+2. `useCompliment` hook — test generation in isolation (console.log the response)
+3. `forwardRef` on `ComplimentCard` + `downloadCard.ts` — test font capture before full UI
+4. `AnimatedIconBackground` — purely visual, no blockers, build in parallel with step 3
+5. `MainScreen.tsx` — wire everything together; test all phases
+6. Add `AnimatedIconBackground` to `KitchenSinkScreen` for visual validation
+
+---
 
 ## Sources
 
-- [Firebase AI Logic official docs](https://firebase.google.com/docs/ai-logic) — HIGH confidence. Architecture for client-side Gemini calls.
-- [Firebase AI Logic products page](https://firebase.google.com/products/firebase-ai-logic) — HIGH confidence. Security proxy pattern and App Check integration.
-- [Firebase blog: Building AI-powered apps with Firebase AI Logic](https://firebase.blog/posts/2025/05/building-ai-apps/) — HIGH confidence. Architecture patterns, SDK guidance.
-- [Streaming Cloud Functions with Genkit](https://firebase.blog/posts/2025/03/streaming-cloud-functions-genkit/) — MEDIUM confidence. Confirms when Cloud Functions ARE needed vs client SDK.
-- [html-to-image vs html2canvas comparison](https://betterprogramming.pub/heres-why-i-m-replacing-html2canvas-with-html-to-image-in-our-react-app-d8da0b85eadf) — MEDIUM confidence. Recommends html-to-image for modern React, better CSS fidelity.
-- [npm-compare: html2canvas vs html-to-image vs dom-to-image](https://npm-compare.com/dom-to-image,html-to-image,html2canvas) — MEDIUM confidence. Download/maintenance stats.
-- [React folder structure 2025 — Robin Wieruch](https://www.robinwieruch.de/react-folder-structure/) — HIGH confidence. Feature-based folder structure recommendation.
-- [Building a Scalable DLS in React Native](https://medium.com/@shubhamdhage930/building-a-scalable-design-language-system-dls-in-react-native-using-nativewind-f93815d32999) — MEDIUM confidence. DLS token/primitive organization patterns.
+- [Firebase AI Logic official docs](https://firebase.google.com/docs/ai-logic) — HIGH confidence. Client SDK architecture for browser-side Gemini calls.
+- [Firebase AI Logic get started](https://firebase.google.com/docs/ai-logic/get-started) — HIGH confidence. Setup steps, package install, initialization code.
+- [Firebase AI Logic products page](https://firebase.google.com/products/firebase-ai-logic) — HIGH confidence. Security proxy pattern (API key never in client).
+- [html-to-image GitHub](https://github.com/bubkoo/html-to-image) — HIGH confidence. toPng API, getFontEmbedCSS option, forwardRef pattern.
+- [html-to-image issue #213: Load fonts from document.fonts](https://github.com/bubkoo/html-to-image/issues/213) — HIGH confidence. Font loading workaround, getFontEmbedCSS as solution.
+- [html-to-image issue #412: embedFontCss with localhost](https://github.com/bubkoo/html-to-image/issues/412) — MEDIUM confidence. Confirms self-hosted font edge cases.
+- Genkit overview (genkit.dev) — HIGH confidence. Confirms Node.js-only runtime; cannot run in browser.
 
 ---
-*Architecture research for: EgoBoost 3000 — React + Firebase + Gemini Flash compliment card generator*
-*Researched: 2026-03-13*
+*Architecture research for: EgoBoost 3000 — v2.0 milestone integration*
+*Researched: 2026-03-14*
