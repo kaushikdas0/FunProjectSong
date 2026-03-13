@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Make It Work
 status: planning
-stopped_at: Phase 3 context gathered
+stopped_at: Phase 3 planned, Firebase project setup complete
 last_updated: "2026-03-13T16:58:03.002Z"
 last_activity: 2026-03-14 — v2.0 roadmap created, 11/11 requirements mapped
 progress:
@@ -68,7 +68,7 @@ None.
 
 ### Blockers/Concerns
 
-- [Phase 3 prereq]: Firebase project must be created with AI Logic enabled in Firebase console before any code is written
+- ~~[Phase 3 prereq]: Firebase project must be created with AI Logic enabled in Firebase console before any code is written~~ — RESOLVED 2026-03-14: project egoboost3000-a2cfc created, web app registered, AI Logic + Remote Config APIs enabled, SDK config in .env
 - [Phase 4 risk]: Self-hosted font on localhost may not embed in html-to-image (GitHub issue #412) — verify on staging URL early, not just localhost
 
 ## Session Continuity

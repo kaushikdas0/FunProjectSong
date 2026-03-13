@@ -12,6 +12,7 @@
   "dependencies": {
     "@fontsource/caveat": "^5.2.8",
     "@tailwindcss/vite": "^4.2.1",
+    "firebase": "^12.10.0",
     "pixelarticons": "^2.0.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
