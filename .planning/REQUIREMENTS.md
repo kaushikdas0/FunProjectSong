@@ -10,10 +10,10 @@ Requirements for v2.0 Make It Work milestone. Each maps to roadmap phases.
 ### AI Generation
 
 - [ ] **GEN-01**: User can enter their name and tap a generate button to receive a compliment
-- [ ] **GEN-02**: Compliment is generated via Firebase AI Logic (Gemini Flash, no backend server)
+- [x] **GEN-02**: Compliment is generated via Firebase AI Logic (Gemini Flash, no backend server)
 - [ ] **GEN-03**: Compliment text streams onto the card with a typewriter animation effect
-- [ ] **GEN-04**: User can tap regenerate to get a new compliment (replaces current one)
-- [ ] **GEN-05**: Error state shows a friendly message with a retry button
+- [x] **GEN-04**: User can tap regenerate to get a new compliment (replaces current one)
+- [x] **GEN-05**: Error state shows a friendly message with a retry button
 
 ### Card Download
 
@@ -52,10 +52,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | GEN-01 | Phase 3 | Pending |
-| GEN-02 | Phase 3 | Pending |
+| GEN-02 | Phase 3 | Complete |
 | GEN-03 | Phase 4 | Pending |
-| GEN-04 | Phase 3 | Pending |
-| GEN-05 | Phase 3 | Pending |
+| GEN-04 | Phase 3 | Complete |
+| GEN-05 | Phase 3 | Complete |
 | DWNL-01 | Phase 4 | Pending |
 | DWNL-02 | Phase 4 | Pending |
 | DWNL-03 | Phase 4 | Pending |

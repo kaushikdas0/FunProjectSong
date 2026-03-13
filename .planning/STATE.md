@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Make It Work
-status: planning
-stopped_at: Phase 3 planned, Firebase project setup complete
-last_updated: "2026-03-13T16:58:03.002Z"
-last_activity: 2026-03-14 — v2.0 roadmap created, 11/11 requirements mapped
+status: in-progress
+stopped_at: "Phase 03 Plan 01 complete — useCompliment hook, Firebase singleton, Vitest configured"
+last_updated: "2026-03-14T17:36:00.000Z"
+last_activity: 2026-03-14 — Phase 3 Plan 01 executed, 6/6 tests passing
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 1
+  completed_plans: 1
+  percent: 33
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 ## Current Position
 
 Phase: 3 of 5 (AI Foundation) — first v2.0 phase
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-03-14 — v2.0 roadmap created, 11/11 requirements mapped
+Plan: 1 of 3 complete
+Status: In progress
+Last activity: 2026-03-14 — Plan 03-01 executed: Firebase singleton + useCompliment hook (6 tests passing)
 
-Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (v2.0)
+Progress: [██████░░░░░░░░░░░░░░] 33% (v2.0 Phase 3)
 
 ## Performance Metrics
 
@@ -45,6 +45,12 @@ Progress: [░░░░░░░░░░░░░░░░░░░░] 0% (v2.
 | 01-design-language-system P01 | 1 | 2 | 18 |
 | 01-design-language-system P02 | 1 | 2 | 3 |
 | 02-card-component P01 | 1 | 2 | 2 |
+
+**By Phase (v2.0):**
+
+| Phase | Plans | Tasks | Files | Duration |
+|-------|-------|-------|-------|----------|
+| 03-ai-foundation P01 | 1 | 2 | 7 | ~15 min |
 
 ## Accumulated Context
 
@@ -61,6 +67,8 @@ Key decisions for v2.0:
 - Remote Config for model name — prevents production outage when Gemini model retires (June 1, 2026)
 - Phase state machine in useCompliment hook — idle/generating/result/error, not URL routes
 - GEN-03 (typewriter) mapped to Phase 4 alongside card download — both need the same forwardRef DOM node
+- vitest --legacy-peer-deps required: @tailwindcss/vite@4.2.1 false peer dep conflict with vite 8; vitest 4.1.0 supports vite 8 correctly
+- createModel synchronous: getGenerativeModel is cheap; Remote Config fetch stays in getModelName separately
 
 ### Pending Todos
 
@@ -73,6 +81,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-13T16:58:03.000Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-ai-foundation/03-CONTEXT.md
+Last session: 2026-03-14T17:36:00.000Z
+Stopped at: Completed Phase 03 Plan 01 — useCompliment hook, Firebase singleton, Vitest configured
+Resume file: .planning/phases/03-ai-foundation/03-02-PLAN.md (next plan)

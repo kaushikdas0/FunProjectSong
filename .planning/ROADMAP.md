@@ -35,7 +35,7 @@
   3. When generation fails (network error, quota exceeded), a friendly message and retry button appear — no raw API errors shown
   4. The app never exposes an API key in the browser bundle (Firebase AI Logic proxy handles it)
   5. The generate button cannot be tapped twice simultaneously (debounce prevents double-fire)
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 03-01-PLAN.md — Firebase SDK init, Vitest setup, useCompliment hook with state machine and tests
@@ -79,6 +79,6 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 1. Design Language System | v1.0 | 2/2 | Complete | 2026-03-13 |
 | 2. Card Component | v1.0 | 1/1 | Complete | 2026-03-13 |
-| 3. AI Foundation | v2.0 | 0/2 | Not started | - |
+| 3. AI Foundation | 1/2 | In Progress|  | - |
 | 4. Card Download | v2.0 | 0/2 | Not started | - |
 | 5. Visual Polish | v2.0 | 0/2 | Not started | - |
