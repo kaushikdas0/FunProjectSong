@@ -38,8 +38,8 @@
 **Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 03-01-PLAN.md — Firebase SDK init, Vitest setup, useCompliment hook with state machine and tests
-- [ ] 03-02-PLAN.md — MainScreen wired to useCompliment with name input, generate/regenerate, error UI
+- [x] 03-01-PLAN.md — Firebase SDK init, Vitest setup, useCompliment hook with state machine and tests
+- [x] 03-02-PLAN.md — MainScreen wired to useCompliment with name input, generate/regenerate, error UI
 
 ### Phase 4: Card Download
 **Goal**: The compliment streams onto the card with a typewriter effect and users can download a sharp, font-correct PNG
@@ -50,11 +50,11 @@ Plans:
   2. User can tap Download and receive a PNG file saved to their device
   3. Downloaded PNG renders Caveat font correctly (not system sans-serif fallback)
   4. Downloaded PNG is sharp on Retina/HiDPI displays (not blurry 1x resolution)
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 04-01: forwardRef on ComplimentCard, downloadCard utility with document.fonts.ready + getFontEmbedCSS + pixelRatio >= 2
-- [ ] 04-02: TypewriterText component wired to streaming output, download button in MainScreen
+- [ ] 04-01-PLAN.md — Install html-to-image, ref on ComplimentCard, downloadCard utility, useTypewriter hook, streaming useCompliment
+- [ ] 04-02-PLAN.md — Wire streaming card + download button into MainScreen, human-verify full flow
 
 ### Phase 5: Visual Polish
 **Goal**: The app feels alive with a gentle animated background and works correctly on mobile devices
@@ -79,6 +79,6 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 1. Design Language System | v1.0 | 2/2 | Complete | 2026-03-13 |
 | 2. Card Component | v1.0 | 1/1 | Complete | 2026-03-13 |
-| 3. AI Foundation | 2/2 | Complete   | 2026-03-13 | - |
+| 3. AI Foundation | v2.0 | 2/2 | Complete | 2026-03-13 |
 | 4. Card Download | v2.0 | 0/2 | Not started | - |
 | 5. Visual Polish | v2.0 | 0/2 | Not started | - |
