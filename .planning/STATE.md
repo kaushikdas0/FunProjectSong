@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-03-13T10:46:15.288Z"
+stopped_at: Completed 01-design-language-system-01-PLAN.md
+last_updated: "2026-03-13T11:16:55.622Z"
 last_activity: 2026-03-13 — Roadmap created
 progress:
   total_phases: 2
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 2
+  completed_plans: 1
   percent: 0
 ---
 
@@ -50,6 +50,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 01-design-language-system P01 | 3 | 2 tasks | 18 files |
 
 ## Accumulated Context
 
@@ -60,6 +61,9 @@ Recent decisions affecting current work:
 
 - DLS-first: Build and validate the design system before any feature work — card quality depends on stable DLS tokens
 - Self-hosted fonts: Required to avoid CORS canvas taint during card PNG export — Google Fonts CDN is not safe for html-to-image
+- [Phase 01-design-language-system]: No tailwind.config.js — Tailwind v4 uses only CSS @theme block
+- [Phase 01-design-language-system]: Self-hosted Caveat via @fontsource/caveat — prevents CORS canvas taint in future card export
+- [Phase 01-design-language-system]: Used --legacy-peer-deps for @tailwindcss/vite — Tailwind v4.2.1 peer dep lag with Vite 8 (works correctly)
 
 ### Pending Todos
 
@@ -71,6 +75,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T10:46:15.286Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-design-language-system/01-CONTEXT.md
+Last session: 2026-03-13T11:16:55.620Z
+Stopped at: Completed 01-design-language-system-01-PLAN.md
+Resume file: None

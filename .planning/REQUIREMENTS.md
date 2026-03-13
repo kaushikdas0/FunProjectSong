@@ -9,8 +9,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Design System
 
-- [ ] **DLS-01**: Color token system with soft blues + cream palette as CSS custom properties
-- [ ] **DLS-02**: Typography system with handwritten/whimsical font (self-hosted) and heading/body scales
+- [x] **DLS-01**: Color token system with soft blues + cream palette as CSS custom properties
+- [x] **DLS-02**: Typography system with handwritten/whimsical font (self-hosted) and heading/body scales
 - [ ] **DLS-03**: Slightly retro techy icon set as inline SVGs
 - [ ] **DLS-04**: Kitchen sink validation screen showing all DLS components together
 
@@ -57,8 +57,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DLS-01 | Phase 1 | Pending |
-| DLS-02 | Phase 1 | Pending |
+| DLS-01 | Phase 1 | Complete |
+| DLS-02 | Phase 1 | Complete |
 | DLS-03 | Phase 1 | Pending |
 | DLS-04 | Phase 1 | Pending |
 | CARD-01 | Phase 2 | Pending |
