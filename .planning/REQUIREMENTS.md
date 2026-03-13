@@ -16,7 +16,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Card
 
-- [ ] **CARD-01**: Styled card component with calm/cozy aesthetic (soft blues, cream, handwritten font, retro icons)
+- [x] **CARD-01**: Styled card component with calm/cozy aesthetic (soft blues, cream, handwritten font, retro icons)
 
 ## v2 Requirements
 
@@ -61,7 +61,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DLS-02 | Phase 1 | Complete |
 | DLS-03 | Phase 1 | Complete |
 | DLS-04 | Phase 1 | Complete |
-| CARD-01 | Phase 2 | Pending |
+| CARD-01 | Phase 2 | Complete |
 
 **Coverage:**
 - v1 requirements: 5 total
