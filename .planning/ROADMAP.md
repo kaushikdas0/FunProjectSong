@@ -35,11 +35,11 @@
   3. When generation fails (network error, quota exceeded), a friendly message and retry button appear — no raw API errors shown
   4. The app never exposes an API key in the browser bundle (Firebase AI Logic proxy handles it)
   5. The generate button cannot be tapped twice simultaneously (debounce prevents double-fire)
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 03-01: Firebase project setup, AI Logic SDK init, useCompliment hook with phase state machine
-- [ ] 03-02: MainScreen wired to useCompliment — name input, generate/regenerate buttons, error state UI
+- [ ] 03-01-PLAN.md — Firebase SDK init, Vitest setup, useCompliment hook with state machine and tests
+- [ ] 03-02-PLAN.md — MainScreen wired to useCompliment with name input, generate/regenerate, error UI
 
 ### Phase 4: Card Download
 **Goal**: The compliment streams onto the card with a typewriter effect and users can download a sharp, font-correct PNG
