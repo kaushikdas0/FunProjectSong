@@ -26,7 +26,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. The handwritten/whimsical font loads from self-hosted files and renders at all heading/body scale steps — no system font fallback visible
   3. All retro techy icon SVGs render inline at their intended sizes with correct color tokens applied
   4. The kitchen sink screen exists at a dev-only route and shows every DLS component variant together on one page
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Scaffold Vite project, install dependencies, create DLS token system and typography
+- [ ] 01-02-PLAN.md — Build Icon component, kitchen sink screen, dev-only routing, visual approval
 
 ### Phase 2: Card Component
 **Goal**: A styled compliment card component exists that uses only DLS tokens, renders correctly on screen, and is ready to receive a name and compliment as props
@@ -45,5 +49,5 @@ Phases execute in numeric order: 1 → 2
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Design Language System | 0/TBD | Not started | - |
+| 1. Design Language System | 0/2 | Not started | - |
 | 2. Card Component | 0/TBD | Not started | - |
