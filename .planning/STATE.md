@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: MVP Foundation
-status: milestone_complete
-stopped_at: v1.0 milestone completed
+milestone: v2.0
+milestone_name: Make It Work
+status: planning
+stopped_at: Defining requirements
 last_updated: "2026-03-14"
-last_activity: 2026-03-14 — v1.0 milestone completed
+last_activity: 2026-03-14 — Milestone v2.0 started
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 3
-  completed_plans: 3
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,14 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-14)
 
 **Core value:** One tap from name to a downloadable, shareable compliment card that makes anyone smile
-**Current focus:** Planning next milestone
+**Current focus:** v2.0 — Make It Work
 
 ## Current Position
 
-Milestone v1.0 complete. Ready for v2.0.
-Last activity: 2026-03-14 — v1.0 milestone completed
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-14 — Milestone v2.0 started
 
-Progress: [████████████████████] 100%
+Progress: [░░░░░░░░░░░░░░░░░░░░] 0%
 
 ## Performance Metrics
 

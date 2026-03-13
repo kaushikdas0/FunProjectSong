@@ -20,7 +20,7 @@ One tap from name to a downloadable, shareable compliment card that makes anyone
 ### Active
 
 - [ ] User can enter their name and receive an AI-generated ridiculously dramatic compliment
-- [ ] Compliment is generated via Gemini Flash API (Firebase stack)
+- [ ] Compliment is generated via Genkit (no Cloud Functions needed)
 - [ ] User can download the compliment as a styled card image
 - [ ] User can regenerate for a new compliment
 - [ ] UI is minimal — name input, generate button, card output, download button
@@ -39,6 +39,19 @@ One tap from name to a downloadable, shareable compliment card that makes anyone
 - Multiple languages — validate English first
 - Photo upload — requires image processing, content moderation, storage
 
+## Current Milestone: v2.0 Make It Work
+
+**Goal:** Turn the visual foundation into a fully working app — name input to downloadable compliment card, powered by Genkit.
+
+**Target features:**
+- Name input → AI compliment generation via Genkit (no Cloud Functions)
+- Compliment displayed on ComplimentCard with typewriter animation
+- Regenerate button for new compliment
+- Download card as PNG (html-to-image, document.fonts.ready)
+- Error state with friendly message + retry
+- Mobile-responsive single-column layout
+- Animated background icons — pixelarticons with color fill, gentle border pulse, scattered behind the card
+
 ## Context
 
 - Target audience: Anyone who wants a quick smile — share with friends, coworkers, social media
@@ -51,7 +64,7 @@ One tap from name to a downloadable, shareable compliment card that makes anyone
 
 ## Constraints
 
-- **AI Provider**: Gemini Flash via Firebase — chosen for speed and cost efficiency
+- **AI Provider**: Gemini Flash via Genkit — no Cloud Functions, simpler deployment
 - **Framework**: React 19 + Vite 8
 - **Backend**: Firebase stack
 - **Design**: Calm & cozy (soft blues + cream), Caveat handwritten font (self-hosted), pixelarticons
@@ -62,6 +75,8 @@ One tap from name to a downloadable, shareable compliment card that makes anyone
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Gemini Flash over Claude/OpenAI | User preference for Firebase stack + faster generation | — Pending |
+| Genkit over Cloud Functions | Simpler architecture, no separate function deployment needed | — Pending |
+| Animated background icons | Pixelarticons with color fill + gentle border pulse behind the card | — Pending |
 | Card download as primary output | The shareable card IS the product, not just reading text | — Pending |
 | DLS-first approach | Build and validate design system before features | ✓ Good — stable visual foundation, no drift |
 | Single compliment style (dramatic) | Simplicity — no vibe picker for v1 | — Pending |
@@ -70,4 +85,4 @@ One tap from name to a downloadable, shareable compliment card that makes anyone
 | Pixelarticons at 24px multiples only | Non-multiples cause sub-pixel blurring on pixel art | ✓ Good — crisp rendering |
 
 ---
-*Last updated: 2026-03-14 after v1.0 milestone*
+*Last updated: 2026-03-14 after v2.0 milestone start*
