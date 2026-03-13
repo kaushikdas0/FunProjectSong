@@ -3,6 +3,7 @@
 // Shows every DLS token, type scale step, button variant, and icon together
 
 import { Icon } from '../components/Icon/Icon';
+import { ComplimentCard } from '../components/Card/ComplimentCard';
 
 interface SwatchProps {
   bgClass: string;
@@ -223,6 +224,17 @@ export default function KitchenSinkScreen() {
               <span className="text-label text-text-muted">decorative</span>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── COMPLIMENT CARD ── */}
+      <section className="mb-12">
+        <h2 className="text-heading-md text-text-secondary mb-6">Compliment Card</h2>
+        <div className="bg-blue-200 rounded-card p-10 flex justify-center">
+          <ComplimentCard
+            name="Mx. Spectacular"
+            compliment="You are a mass of radiant sunshine wrapped in human form. Scientists are baffled. Poets weep. Even your houseplants are thriving."
+          />
         </div>
       </section>
     </div>
