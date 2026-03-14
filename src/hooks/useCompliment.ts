@@ -31,8 +31,8 @@ export function useCompliment() {
       }
 
       setState({ status: "result", name, compliment: accumulated.trim() });
-    } catch {
-      // All errors map to a single friendly message — no raw errors surface
+    } catch (err) {
+      console.error("[EgoBoost] Compliment generation failed:", err);
       setState({ status: "error" });
     } finally {
       isFlyingRef.current = false;
