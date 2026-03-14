@@ -42,6 +42,48 @@
 
 ---
 
+## Milestone: v2.0 — Make It Work
+
+**Shipped:** 2026-03-14
+**Phases:** 2 (3-4) | **Plans:** 4
+
+### What Was Built
+- Firebase AI Logic (Gemini Flash) hook with idle/generating/streaming/result/error state machine
+- Streaming typewriter animation — compliment reveals character-by-character during generation
+- Retina PNG card download via html-to-image with embedded Caveat font
+- 32 automated tests covering all states, debounce guard, streaming, and download flow
+
+### What Worked
+- TDD cycle per module — every hook and utility written test-first, caught real bugs before integration
+- Discriminated union state machine — clean conditional rendering with no boolean flag soup
+- React 19 ref-as-prop pattern — no forwardRef boilerplate for DOM capture
+- Streaming state between generating and result — enables typewriter without post-hoc animation hacks
+- Deciding early to drop Phase 5 — app works, shipping > polishing
+
+### What Was Inefficient
+- Phase 5 Visual Polish was planned, partially executed, reverted, then removed — wasted planning and execution cycles on work that was ultimately cut
+- Firebase project migration mid-session (expired API key) — avoidable with earlier key rotation awareness
+- Summary one-liner fields still not populated by executors — same gap as v1.0, still minor
+
+### Patterns Established
+- Streaming state machine: idle → generating → streaming → result (not just idle → loading → result)
+- getFontEmbedCSS in try/catch: CORS failures on localhost must not block download
+- useTypewriter reads from growing source string via functional setState — avoids stale closures
+- React 19 ref as plain prop: `ref?: Ref<HTMLDivElement>` in interface, no forwardRef
+
+### Key Lessons
+1. Plan for API key rotation — external services expire; have a rotation procedure before it causes downtime
+2. Cut scope early rather than late — Phase 5 revert+remove cost more than never planning it
+3. Streaming state as first-class status enables richer UX with no extra complexity in the consumer
+4. Test the download on a real deployed URL, not just localhost — CORS behavior differs
+
+### Cost Observations
+- Model mix: balanced profile (sonnet executor)
+- Sessions: ~3 (phases 3-4, security audit, migration/cleanup)
+- Notable: Both phases completed in a single day; Firebase project migration added unplanned session
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -49,8 +91,11 @@
 | Milestone | Phases | Plans | Key Change |
 |-----------|--------|-------|------------|
 | v1.0 | 2 | 3 | DLS-first foundation approach |
+| v2.0 | 2 | 4 | Streaming state machine + TDD per module |
 
 ### Top Lessons (Verified Across Milestones)
 
 1. Build visual foundation before features — prevents style drift
 2. Self-host fonts when image export is in scope
+3. Cut scope decisions early — late cuts waste planning and execution cycles
+4. Streaming state as first-class status unlocks richer UX with no consumer complexity
