@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Make It Work
 status: executing
-stopped_at: "Completed 04-02-PLAN.md — awaiting human verify checkpoint: streaming typewriter + download PNG quality"
-last_updated: "2026-03-14T01:02:39.956Z"
+stopped_at: Completed 04-02-PLAN.md — Phase 4 Card Download complete
+last_updated: "2026-03-14T01:14:23.748Z"
 last_activity: "2026-03-14 — Plan 04-01 executed: downloadCard, useTypewriter, streaming useCompliment, ComplimentCard ref (28 tests passing)"
 progress:
   total_phases: 3
@@ -79,6 +79,7 @@ Key decisions for v2.0:
 - [Phase 04-card-download]: React 19 ref as plain prop on ComplimentCard — no forwardRef wrapper needed, exposes DOM node for capture
 - [Phase 04-card-download]: Download button gated on isResult only — prevents capturing half-written streaming text
 - [Phase 04-card-download]: canGenerate blocks during isStreaming — prevents double-trigger mid-stream
+- [Phase 04-card-download]: ComplimentCard outer padding (p-[10px]) + border-cream-400 added during human verify — card floats with breathing room in downloaded PNG
 
 ### Pending Todos
 
@@ -91,6 +92,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T01:02:39.954Z
-Stopped at: Completed 04-02-PLAN.md — awaiting human verify checkpoint: streaming typewriter + download PNG quality
+Last session: 2026-03-14T01:14:23.747Z
+Stopped at: Completed 04-02-PLAN.md — Phase 4 Card Download complete
 Resume file: None
