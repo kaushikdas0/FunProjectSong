@@ -43,14 +43,14 @@ export default function MainScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-cream-300 flex flex-col items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-cream-300 flex flex-col items-center justify-start pt-12 sm:justify-center sm:pt-0 px-4 relative overflow-x-hidden">
       {/* Scattered decorative background icons */}
       <AnimatedIconBackground />
 
       {/* Main content */}
       <div className="relative z-10 flex flex-col items-center w-full">
         {/* Title */}
-        <h1 className="font-caveat text-5xl text-text-primary mb-8 text-center">
+        <h1 className="font-caveat text-4xl sm:text-5xl text-text-primary mb-8 text-center">
           EgoBoost 3000
         </h1>
 
