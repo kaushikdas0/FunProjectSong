@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Make It Work
 status: executing
-stopped_at: Completed 04-01-PLAN.md — four building blocks ready for MainScreen integration
-last_updated: "2026-03-14T00:59:20.821Z"
+stopped_at: "Completed 04-02-PLAN.md — awaiting human verify checkpoint: streaming typewriter + download PNG quality"
+last_updated: "2026-03-14T01:02:39.956Z"
 last_activity: "2026-03-14 — Plan 04-01 executed: downloadCard, useTypewriter, streaming useCompliment, ComplimentCard ref (28 tests passing)"
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
   percent: 75
 ---
 
@@ -53,6 +53,7 @@ Progress: [████████░░] 75% (v2.0 Phase 4)
 | 03-ai-foundation P01 | 1 | 2 | 7 | ~15 min |
 | Phase 03-ai-foundation P02 | 30 | 2 tasks | 2 files |
 | Phase 04-card-download P01 | 18 | 2 tasks | 8 files |
+| Phase 04-card-download P02 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,8 @@ Key decisions for v2.0:
 - [Phase 04-card-download]: downloadCard try/catch around getFontEmbedCSS — localhost CORS failures must not block download
 - [Phase 04-card-download]: streaming status added to ComplimentState between generating and result — card renders partial text during AI stream
 - [Phase 04-card-download]: React 19 ref as plain prop on ComplimentCard — no forwardRef wrapper needed, exposes DOM node for capture
+- [Phase 04-card-download]: Download button gated on isResult only — prevents capturing half-written streaming text
+- [Phase 04-card-download]: canGenerate blocks during isStreaming — prevents double-trigger mid-stream
 
 ### Pending Todos
 
@@ -88,6 +91,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T00:59:20.819Z
-Stopped at: Completed 04-01-PLAN.md — four building blocks ready for MainScreen integration
+Last session: 2026-03-14T01:02:39.954Z
+Stopped at: Completed 04-02-PLAN.md — awaiting human verify checkpoint: streaming typewriter + download PNG quality
 Resume file: None

@@ -20,7 +20,7 @@
 **Milestone Goal:** Turn the visual foundation into a fully working app — name input to downloadable compliment card, powered by Firebase AI Logic (Gemini Flash).
 
 - [x] **Phase 3: AI Foundation** - Firebase project wired, name input triggers real Gemini completions with streaming, full error handling (completed 2026-03-13)
-- [ ] **Phase 4: Card Download** - Compliment streams onto the card with typewriter animation; card downloads as a retina-quality PNG with correct fonts
+- [x] **Phase 4: Card Download** - Compliment streams onto the card with typewriter animation; card downloads as a retina-quality PNG with correct fonts (completed 2026-03-14)
 - [ ] **Phase 5: Visual Polish** - Animated icon background, mobile-responsive layout, reduced-motion support
 
 ## Phase Details
@@ -50,7 +50,7 @@ Plans:
   2. User can tap Download and receive a PNG file saved to their device
   3. Downloaded PNG renders Caveat font correctly (not system sans-serif fallback)
   4. Downloaded PNG is sharp on Retina/HiDPI displays (not blurry 1x resolution)
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 04-01-PLAN.md — Install html-to-image, ref on ComplimentCard, downloadCard utility, useTypewriter hook, streaming useCompliment
@@ -80,5 +80,5 @@ Plans:
 | 1. Design Language System | v1.0 | 2/2 | Complete | 2026-03-13 |
 | 2. Card Component | v1.0 | 1/1 | Complete | 2026-03-13 |
 | 3. AI Foundation | v2.0 | 2/2 | Complete | 2026-03-13 |
-| 4. Card Download | 1/2 | In Progress|  | - |
+| 4. Card Download | 2/2 | Complete   | 2026-03-14 | - |
 | 5. Visual Polish | v2.0 | 0/2 | Not started | - |
