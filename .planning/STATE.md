@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Make It Work
 status: executing
-stopped_at: Completed 03-02-PLAN.md — Phase 3 AI Foundation fully complete
-last_updated: "2026-03-13T17:56:05.169Z"
-last_activity: "2026-03-14 — Plan 03-01 executed: Firebase singleton + useCompliment hook (6 tests passing)"
+stopped_at: Completed 04-01-PLAN.md — four building blocks ready for MainScreen integration
+last_updated: "2026-03-14T00:59:20.821Z"
+last_activity: "2026-03-14 — Plan 04-01 executed: downloadCard, useTypewriter, streaming useCompliment, ComplimentCard ref (28 tests passing)"
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
-  percent: 33
+  total_plans: 4
+  completed_plans: 3
+  percent: 75
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-14)
 
 **Core value:** One tap from name to a downloadable, shareable compliment card that makes anyone smile
-**Current focus:** Phase 3 — AI Foundation
+**Current focus:** Phase 4 — Card Download
 
 ## Current Position
 
-Phase: 3 of 5 (AI Foundation) — first v2.0 phase
-Plan: 1 of 3 complete
+Phase: 4 of 5 (Card Download) — second v2.0 phase
+Plan: 1 of 2 complete
 Status: In progress
-Last activity: 2026-03-14 — Plan 03-01 executed: Firebase singleton + useCompliment hook (6 tests passing)
+Last activity: 2026-03-14 — Plan 04-01 executed: downloadCard, useTypewriter, streaming useCompliment, ComplimentCard ref (28 tests passing)
 
-Progress: [██████░░░░░░░░░░░░░░] 33% (v2.0 Phase 3)
+Progress: [████████░░] 75% (v2.0 Phase 4)
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Progress: [██████░░░░░░░░░░░░░░] 33% (v2
 |-------|-------|-------|-------|----------|
 | 03-ai-foundation P01 | 1 | 2 | 7 | ~15 min |
 | Phase 03-ai-foundation P02 | 30 | 2 tasks | 2 files |
+| Phase 04-card-download P01 | 18 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,9 @@ Key decisions for v2.0:
 - createModel synchronous: getGenerativeModel is cheap; Remote Config fetch stays in getModelName separately
 - [Phase 03-ai-foundation]: maxOutputTokens increased to 1024 — default 120 truncated compliments mid-sentence; discovered during human-verify
 - [Phase 03-ai-foundation]: Background decorative icons shipped in Plan 02 (not Phase 5) — pixelarticons already installed, low-cost addition during MainScreen fix pass
+- [Phase 04-card-download]: downloadCard try/catch around getFontEmbedCSS — localhost CORS failures must not block download
+- [Phase 04-card-download]: streaming status added to ComplimentState between generating and result — card renders partial text during AI stream
+- [Phase 04-card-download]: React 19 ref as plain prop on ComplimentCard — no forwardRef wrapper needed, exposes DOM node for capture
 
 ### Pending Todos
 
@@ -84,6 +88,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-13T17:52:02.350Z
-Stopped at: Completed 03-02-PLAN.md — Phase 3 AI Foundation fully complete
+Last session: 2026-03-14T00:59:20.819Z
+Stopped at: Completed 04-01-PLAN.md — four building blocks ready for MainScreen integration
 Resume file: None
