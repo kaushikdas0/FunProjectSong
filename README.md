@@ -118,5 +118,7 @@ Uses Firebase Hosting free tier.
 ---
 
 <p align="center">
-  <sub>Made with <img src="https://img.shields.io/badge/Claude_Code-5A4A6F?style=flat&logoColor=white" alt="Claude Code" align="center" /> by Anthropic</sub>
+  <sub>Designed and built by 44 people from the Song team on a Friday evening</sub>
+  <br/>
+  <sub>Powered by <img src="https://img.shields.io/badge/Claude_Code-5A4A6F?style=flat&logoColor=white" alt="Claude Code" align="center" /></sub>
 </p>
