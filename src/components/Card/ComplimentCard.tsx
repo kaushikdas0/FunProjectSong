@@ -14,9 +14,9 @@ interface ComplimentCardProps {
 
 export function ComplimentCard({ name, compliment, ref }: ComplimentCardProps) {
   return (
+    <div ref={ref} className="w-full max-w-[400px] mx-auto p-[10px]">
     <div
-      ref={ref}
-      className="bg-cream-50 rounded-card w-full max-w-[380px] mx-auto flex flex-col items-center text-center shadow-[0_8px_30px_rgba(90,74,111,0.12)]"
+      className="bg-cream-50 rounded-card w-full flex flex-col items-center text-center shadow-[0_8px_30px_rgba(90,74,111,0.12)] border border-cream-400"
       style={{ padding: 'var(--spacing-card-pad-y) var(--spacing-card-pad-x)' }}
     >
       {/* Heart icon — decorative warmth above the name */}
@@ -33,6 +33,7 @@ export function ComplimentCard({ name, compliment, ref }: ComplimentCardProps) {
 
       {/* Footer */}
       <p className="text-label text-text-muted mt-8 opacity-60">EgoBoost 3000</p>
+    </div>
     </div>
   );
 }

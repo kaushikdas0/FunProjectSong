@@ -17,9 +17,9 @@ Requirements for v2.0 Make It Work milestone. Each maps to roadmap phases.
 
 ### Card Download
 
-- [ ] **DWNL-01**: User can download the compliment card as a PNG image
-- [ ] **DWNL-02**: Downloaded PNG renders fonts correctly (document.fonts.ready + getFontEmbedCSS)
-- [ ] **DWNL-03**: Downloaded PNG is retina-quality (pixelRatio >= 2)
+- [x] **DWNL-01**: User can download the compliment card as a PNG image
+- [x] **DWNL-02**: Downloaded PNG renders fonts correctly (document.fonts.ready + getFontEmbedCSS)
+- [x] **DWNL-03**: Downloaded PNG is retina-quality (pixelRatio >= 2)
 
 ### Visual Polish
 
@@ -56,9 +56,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GEN-03 | Phase 4 | Complete |
 | GEN-04 | Phase 3 | Complete |
 | GEN-05 | Phase 3 | Complete |
-| DWNL-01 | Phase 4 | Pending |
-| DWNL-02 | Phase 4 | Pending |
-| DWNL-03 | Phase 4 | Pending |
+| DWNL-01 | Phase 4 | Complete |
+| DWNL-02 | Phase 4 | Complete |
+| DWNL-03 | Phase 4 | Complete |
 | VIZP-01 | Phase 5 | Pending |
 | VIZP-02 | Phase 5 | Pending |
 | VIZP-03 | Phase 5 | Pending |
