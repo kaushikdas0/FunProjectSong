@@ -2,16 +2,16 @@
 
 ## Milestones
 
-- ✅ **v1.0 MVP Foundation** — Phases 1-2 (shipped 2026-03-13)
+- ✅ **v1.0 MVP Foundation** — Phases 1-2 (shipped 2005-03-13)
 - 🚧 **v2.0 Make It Work** — Phases 3-5 (in progress)
 
 ## Phases
 
 <details>
-<summary>✅ v1.0 MVP Foundation (Phases 1-2) — SHIPPED 2026-03-13</summary>
+<summary>✅ v1.0 MVP Foundation (Phases 1-2) — SHIPPED 2005-03-13</summary>
 
-- [x] Phase 1: Design Language System (2/2 plans) — completed 2026-03-13
-- [x] Phase 2: Card Component (1/1 plans) — completed 2026-03-13
+- [x] Phase 1: Design Language System (2/2 plans) — completed 2005-03-13
+- [x] Phase 2: Card Component (1/1 plans) — completed 2005-03-13
 
 </details>
 
@@ -19,9 +19,8 @@
 
 **Milestone Goal:** Turn the visual foundation into a fully working app — name input to downloadable compliment card, powered by Firebase AI Logic (Gemini Flash).
 
-- [x] **Phase 3: AI Foundation** - Firebase project wired, name input triggers real Gemini completions with streaming, full error handling (completed 2026-03-13)
-- [x] **Phase 4: Card Download** - Compliment streams onto the card with typewriter animation; card downloads as a retina-quality PNG with correct fonts (completed 2026-03-14)
-- [ ] **Phase 5: Visual Polish** - Animated icon background, mobile-responsive layout, reduced-motion support
+- [x] **Phase 3: AI Foundation** - Firebase project wired, name input triggers real Gemini completions with streaming, full error handling (completed 2005-03-13)
+- [x] **Phase 4: Card Download** - Compliment streams onto the card with typewriter animation; card downloads as a retina-quality PNG with correct fonts (completed 2005-03-14)
 
 ## Phase Details
 
@@ -55,30 +54,3 @@ Plans:
 Plans:
 - [ ] 04-01-PLAN.md — Install html-to-image, ref on ComplimentCard, downloadCard utility, useTypewriter hook, streaming useCompliment
 - [ ] 04-02-PLAN.md — Wire streaming card + download button into MainScreen, human-verify full flow
-
-### Phase 5: Visual Polish
-**Goal**: The app feels alive with a gentle animated background and works correctly on mobile devices
-**Depends on**: Phase 3 (for real device layout testing with actual content)
-**Requirements**: VIZP-01, VIZP-02, VIZP-03
-**Success Criteria** (what must be TRUE):
-  1. Pixelarticons float behind the card with a gentle color-fill and border pulse animation
-  2. On a device with prefers-reduced-motion enabled, the background icons appear static (no animation)
-  3. On a mobile phone, the full generate-to-download flow works in a single scrollable column without layout overflow
-  4. Background animation does not cause jank (only transform/opacity animated, no paint-triggering properties)
-**Plans**: TBD
-
-Plans:
-- [ ] 05-01: AnimatedIconBackground component with CSS keyframes, prefers-reduced-motion support
-- [ ] 05-02: Mobile-responsive layout pass — single-column verified on real device
-
-## Progress
-
-**Execution Order:** 3 → 4 → 5
-
-| Phase | Milestone | Plans Complete | Status | Completed |
-|-------|-----------|----------------|--------|-----------|
-| 1. Design Language System | v1.0 | 2/2 | Complete | 2026-03-13 |
-| 2. Card Component | v1.0 | 1/1 | Complete | 2026-03-13 |
-| 3. AI Foundation | v2.0 | 2/2 | Complete | 2026-03-13 |
-| 4. Card Download | 2/2 | Complete   | 2026-03-14 | - |
-| 5. Visual Polish | v2.0 | 0/2 | Not started | - |
