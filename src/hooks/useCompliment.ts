@@ -4,6 +4,7 @@ import { getModelName, createModel } from "../lib/firebase";
 export type ComplimentState =
   | { status: "idle" }
   | { status: "generating" }
+  | { status: "streaming"; name: string; compliment: string }
   | { status: "result"; name: string; compliment: string }
   | { status: "error" };
 
@@ -19,11 +20,17 @@ export function useCompliment() {
     try {
       const modelName = await getModelName();
       const model = createModel(modelName);
-      const result = await model.generateContent(
+      const result = await model.generateContentStream(
         `Generate a compliment for: ${name}`
       );
-      const compliment = result.response.text().trim();
-      setState({ status: "result", name, compliment });
+
+      let accumulated = "";
+      for await (const chunk of result.stream) {
+        accumulated += chunk.text();
+        setState({ status: "streaming", name, compliment: accumulated });
+      }
+
+      setState({ status: "result", name, compliment: accumulated.trim() });
     } catch {
       // All errors map to a single friendly message — no raw errors surface
       setState({ status: "error" });

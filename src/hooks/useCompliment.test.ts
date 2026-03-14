@@ -16,19 +16,32 @@ vi.mock('firebase/remote-config', () => ({
   getValue: vi.fn(() => ({ asString: () => 'gemini-2.5-flash' })),
 }));
 
-// Mock generateContent function reference — replaceable per test
-const mockGenerateContent = vi.fn();
+// Mock generateContentStream function reference — replaceable per test
+const mockGenerateContentStream = vi.fn();
 
 // Mock firebase/ai
 vi.mock('firebase/ai', () => ({
   getAI: vi.fn(() => ({})),
   getGenerativeModel: vi.fn(() => ({
-    generateContent: mockGenerateContent,
+    generateContentStream: mockGenerateContentStream,
   })),
   GoogleAIBackend: class {
     constructor() {}
   },
 }));
+
+// Helper: async generator to simulate streaming chunks
+async function* fakeStream(chunks: string[]) {
+  for (const chunk of chunks) {
+    yield { text: () => chunk };
+  }
+}
+
+// Helper: async generator that yields one chunk then throws
+async function* fakeStreamWithError(chunk: string, error: Error) {
+  yield { text: () => chunk };
+  throw error;
+}
 
 // Import hook AFTER mocks are set up
 import { useCompliment } from './useCompliment';
@@ -36,9 +49,9 @@ import { useCompliment } from './useCompliment';
 describe('useCompliment hook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default: successful generateContent
-    mockGenerateContent.mockResolvedValue({
-      response: { text: () => 'mocked compliment' },
+    // Default: successful generateContentStream with single chunk to preserve existing test behavior
+    mockGenerateContentStream.mockResolvedValue({
+      stream: fakeStream(['mocked compliment']),
     });
   });
 
@@ -64,13 +77,20 @@ describe('useCompliment hook', () => {
   it('calling generate() when already generating is a no-op (debounce)', async () => {
     const { result } = renderHook(() => useCompliment());
 
-    // Create a slow generate that we can control
-    let resolveGenerate!: (val: unknown) => void;
-    mockGenerateContent.mockReturnValueOnce(
-      new Promise((resolve) => {
-        resolveGenerate = resolve;
-      })
-    );
+    // Create a slow stream that we can control
+    let resolveStream!: (val: AsyncIterable<{ text: () => string }>) => void;
+    const controlledStream = new Promise<AsyncIterable<{ text: () => string }>>((resolve) => {
+      resolveStream = resolve;
+    });
+
+    async function* slowStream() {
+      const chunks = await controlledStream;
+      for await (const chunk of chunks) {
+        yield chunk;
+      }
+    }
+
+    mockGenerateContentStream.mockResolvedValueOnce({ stream: slowStream() });
 
     // Start first generate without awaiting — Alice is now in-flight
     let firstGeneratePromise: Promise<void>;
@@ -79,14 +99,13 @@ describe('useCompliment hook', () => {
     });
 
     // Bob's generate fires while Alice is still in-flight — isFlyingRef blocks it
-    // Bob's call returns immediately (no-op), doesn't change state, doesn't call API
     act(() => {
       result.current.generate('Bob');
     });
 
-    // Now resolve Alice's in-flight request
+    // Now resolve Alice's in-flight stream
     await act(async () => {
-      resolveGenerate({ response: { text: () => 'Alice compliment' } });
+      resolveStream(fakeStream(['Alice compliment']));
       await firstGeneratePromise!;
     });
 
@@ -97,12 +116,12 @@ describe('useCompliment hook', () => {
       compliment: 'Alice compliment',
     });
 
-    // generateContent called exactly once (Alice only; Bob was never executed)
-    expect(mockGenerateContent).toHaveBeenCalledTimes(1);
+    // generateContentStream called exactly once (Alice only; Bob was never executed)
+    expect(mockGenerateContentStream).toHaveBeenCalledTimes(1);
   });
 
-  it('when generateContent throws, state transitions to { status: "error" }', async () => {
-    mockGenerateContent.mockRejectedValueOnce(new Error('API failure'));
+  it('when generateContentStream throws, state transitions to { status: "error" }', async () => {
+    mockGenerateContentStream.mockRejectedValueOnce(new Error('API failure'));
 
     const { result } = renderHook(() => useCompliment());
 
@@ -115,7 +134,7 @@ describe('useCompliment hook', () => {
 
   it('calling generate("Bob") from error state transitions back through generating to result', async () => {
     // First call: error
-    mockGenerateContent.mockRejectedValueOnce(new Error('API failure'));
+    mockGenerateContentStream.mockRejectedValueOnce(new Error('API failure'));
 
     const { result } = renderHook(() => useCompliment());
 
@@ -126,8 +145,8 @@ describe('useCompliment hook', () => {
     expect(result.current.state.status).toBe('error');
 
     // Second call from error state: success
-    mockGenerateContent.mockResolvedValueOnce({
-      response: { text: () => 'Bob compliment' },
+    mockGenerateContentStream.mockResolvedValueOnce({
+      stream: fakeStream(['Bob compliment']),
     });
 
     await act(async () => {
@@ -143,8 +162,8 @@ describe('useCompliment hook', () => {
 
   it('calling generate("Carol") from result state (regenerate) produces new result', async () => {
     // First call: success for Alice
-    mockGenerateContent.mockResolvedValueOnce({
-      response: { text: () => 'Alice compliment' },
+    mockGenerateContentStream.mockResolvedValueOnce({
+      stream: fakeStream(['Alice compliment']),
     });
 
     const { result } = renderHook(() => useCompliment());
@@ -160,8 +179,8 @@ describe('useCompliment hook', () => {
     });
 
     // Regenerate: call again with Carol
-    mockGenerateContent.mockResolvedValueOnce({
-      response: { text: () => 'Carol compliment' },
+    mockGenerateContentStream.mockResolvedValueOnce({
+      stream: fakeStream(['Carol compliment']),
     });
 
     await act(async () => {
@@ -173,5 +192,38 @@ describe('useCompliment hook', () => {
       name: 'Carol',
       compliment: 'Carol compliment',
     });
+  });
+
+  it('generate transitions through streaming to result with accumulated chunks', async () => {
+    mockGenerateContentStream.mockResolvedValueOnce({
+      stream: fakeStream(['Hello ', 'world!']),
+    });
+
+    const { result } = renderHook(() => useCompliment());
+
+    await act(async () => {
+      await result.current.generate('Alice');
+    });
+
+    // Final state should have full accumulated text
+    expect(result.current.state).toEqual({
+      status: 'result',
+      name: 'Alice',
+      compliment: 'Hello world!',
+    });
+  });
+
+  it('if stream throws mid-way, state transitions to error', async () => {
+    mockGenerateContentStream.mockResolvedValueOnce({
+      stream: fakeStreamWithError('partial text', new Error('stream error')),
+    });
+
+    const { result } = renderHook(() => useCompliment());
+
+    await act(async () => {
+      await result.current.generate('Alice');
+    });
+
+    expect(result.current.state).toEqual({ status: 'error' });
   });
 });
