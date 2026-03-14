@@ -12,10 +12,17 @@ vi.mock('../hooks/useCompliment', () => ({
   })),
 }));
 
+// Mock downloadCard module — we verify it gets called with card DOM node
+vi.mock('../lib/downloadCard', () => ({
+  downloadCard: vi.fn(() => Promise.resolve()),
+}));
+
 import { useCompliment } from '../hooks/useCompliment';
+import { downloadCard } from '../lib/downloadCard';
 import MainScreen from './MainScreen';
 
 const mockUseCompliment = vi.mocked(useCompliment);
+const mockDownloadCard = vi.mocked(downloadCard);
 
 describe('MainScreen', () => {
   beforeEach(() => {
@@ -100,5 +107,44 @@ describe('MainScreen', () => {
     // Card should show the name and compliment
     expect(screen.getByText('Ali')).toBeInTheDocument();
     expect(screen.getByText("You are the universe's finest creation!")).toBeInTheDocument();
+  });
+
+  it('during streaming state, card is visible with partial compliment', () => {
+    mockUseCompliment.mockReturnValue({
+      state: { status: 'streaming', name: 'Ali', compliment: 'You are' },
+      generate: mockGenerate,
+    });
+    render(<MemoryRouter><MainScreen /></MemoryRouter>);
+    // Card name should be visible
+    expect(screen.getByText('Ali')).toBeInTheDocument();
+  });
+
+  it('during streaming state, download button is NOT visible', () => {
+    mockUseCompliment.mockReturnValue({
+      state: { status: 'streaming', name: 'Ali', compliment: 'You are' },
+      generate: mockGenerate,
+    });
+    render(<MemoryRouter><MainScreen /></MemoryRouter>);
+    expect(screen.queryByRole('button', { name: /download/i })).not.toBeInTheDocument();
+  });
+
+  it('during result state, download button IS visible', () => {
+    mockUseCompliment.mockReturnValue({
+      state: { status: 'result', name: 'Ali', compliment: 'You are magnificent!' },
+      generate: mockGenerate,
+    });
+    render(<MemoryRouter><MainScreen /></MemoryRouter>);
+    expect(screen.getByRole('button', { name: /download/i })).toBeInTheDocument();
+  });
+
+  it('tapping download button calls downloadCard', async () => {
+    mockUseCompliment.mockReturnValue({
+      state: { status: 'result', name: 'Ali', compliment: 'You are magnificent!' },
+      generate: mockGenerate,
+    });
+    render(<MemoryRouter><MainScreen /></MemoryRouter>);
+    const downloadButton = screen.getByRole('button', { name: /download/i });
+    fireEvent.click(downloadButton);
+    expect(mockDownloadCard).toHaveBeenCalledTimes(1);
   });
 });
