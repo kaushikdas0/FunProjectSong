@@ -65,11 +65,11 @@ Plans:
   2. On a device with prefers-reduced-motion enabled, the background icons appear static (no animation)
   3. On a mobile phone, the full generate-to-download flow works in a single scrollable column without layout overflow
   4. Background animation does not cause jank (only transform/opacity animated, no paint-triggering properties)
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 05-01: AnimatedIconBackground component with CSS keyframes, prefers-reduced-motion support
-- [ ] 05-02: Mobile-responsive layout pass — single-column verified on real device
+- [ ] 05-01-PLAN.md — AnimatedIconBackground component with custom icon-float keyframe, prefers-reduced-motion CSS guard, smoke test
+- [ ] 05-02-PLAN.md — Mobile-responsive layout audit and fixes, human-verify full visual polish
 
 ## Progress
 
