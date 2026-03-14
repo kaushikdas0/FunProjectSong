@@ -80,6 +80,63 @@ VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
 npm run dev
 ```
 
+## Make it yours — fork first
+
+Everything below assumes you've forked this repo. Hit the **Fork** button at the top of this page — the code, the planning files, and all the context become yours to do anything with.
+
+---
+
+## Take it further
+
+This project was built by designers and a BA in a single evening using [Claude Code](https://claude.ai/claude-code) and the [GSD workflow](https://github.com/anthropics/get-shit-done). Here's how you can keep going from exactly where we left off.
+
+### Step 1 — Add a feature with GSD
+
+GSD (Get Shit Done) is the AI-assisted workflow we used to build this. It keeps Claude focused, writes plans before touching code, and commits atomically so nothing gets lost.
+
+1. Open a terminal in your forked repo
+2. Run `/gsd:progress` to see where the project stands
+3. Run `/gsd:new-milestone` to start planning your next feature — Claude will ask you questions, research the approach, and write a roadmap
+4. Run `/gsd:execute-phase` when you're ready to build
+
+> No coding experience needed. Describe what you want in plain English — GSD handles the rest.
+
+### Step 2 — Design in Figma or Sketch with MCP
+
+Claude Code supports [MCP (Model Context Protocol)](https://www.anthropic.com/news/model-context-protocol), which lets it talk directly to design tools. Once connected, Claude can read your Figma frames or Sketch artboards and translate them into code — no manual redlining.
+
+**For Figma:**
+- Install the [Figma MCP server](https://github.com/GLips/Figma-Context-MCP) and connect it in your Claude Code settings
+- Open your design file, then tell Claude: *"Implement the card design from my Figma file"*
+
+**For Sketch:**
+- Use the [Sketch MCP plugin](https://developer.sketch.com/mcp) to expose your document to Claude
+- Point Claude at a specific artboard and ask it to match the design
+
+> This means your design file IS the spec. No more writing tickets to describe padding values.
+
+### Step 3 — Test with Playwright
+
+Once you've built a new feature, verify it works end-to-end with [Playwright](https://playwright.dev) — a browser testing tool that clicks through your app like a real user.
+
+1. Install Playwright: `npm init playwright@latest`
+2. Ask Claude: *"Write a Playwright test that enters a name, clicks Boost Me, waits for the compliment to appear, and downloads the card"*
+3. Run your tests: `npx playwright test`
+
+> Playwright tests live alongside your code and run on every deploy — so you always know the full flow works before it goes live.
+
+### Step 4 — Plan releases with GitHub Issues + GSD
+
+If you work with a team, GitHub Issues is the bridge between feedback and the roadmap.
+
+1. **Create issues** for bugs, requests, or ideas directly on your forked repo (Issues tab → New issue)
+2. When you're ready to plan a new release, copy the issue titles into a new Claude session and run `/gsd:new-milestone` — describe your issues as the goals for the milestone
+3. GSD will turn them into a phased roadmap with success criteria, so nothing gets built without a clear definition of done
+
+> This is how a BA can own the roadmap without writing a single line of code — write the issues, let GSD plan the work.
+
+---
+
 ## Deploy your own
 
 ```bash
