@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Make It Work
 status: executing
-stopped_at: "Completed 05-02 Task 1 — awaiting human verify at http://localhost:5176"
-last_updated: "2026-03-14T02:25:32.908Z"
-last_activity: "2026-03-14 — Plan 05-01 executed: AnimatedIconBackground component, icon-float keyframe, prefers-reduced-motion guard, 3 smoke tests (35 tests passing)"
+stopped_at: Completed 04-02-PLAN.md — Phase 4 Card Download complete
+last_updated: "2026-03-14T01:17:07.063Z"
+last_activity: "2026-03-14 — Plan 04-01 executed: downloadCard, useTypewriter, streaming useCompliment, ComplimentCard ref (28 tests passing)"
 progress:
   total_phases: 3
-  completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
-  percent: 83
+  completed_phases: 2
+  total_plans: 4
+  completed_plans: 4
+  percent: 75
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-14)
 
 **Core value:** One tap from name to a downloadable, shareable compliment card that makes anyone smile
-**Current focus:** Phase 5 — Visual Polish
+**Current focus:** Phase 4 — Card Download
 
 ## Current Position
 
-Phase: 5 of 5 (Visual Polish) — third v2.0 phase
-Plan: 1 of 1 complete
+Phase: 4 of 5 (Card Download) — second v2.0 phase
+Plan: 1 of 2 complete
 Status: In progress
-Last activity: 2026-03-14 — Plan 05-01 executed: AnimatedIconBackground component, icon-float keyframe, prefers-reduced-motion guard, 3 smoke tests (35 tests passing)
+Last activity: 2026-03-14 — Plan 04-01 executed: downloadCard, useTypewriter, streaming useCompliment, ComplimentCard ref (28 tests passing)
 
-Progress: [█████████░] 83% (v2.0 Phase 5)
+Progress: [████████░░] 75% (v2.0 Phase 4)
 
 ## Performance Metrics
 
@@ -54,8 +54,6 @@ Progress: [█████████░] 83% (v2.0 Phase 5)
 | Phase 03-ai-foundation P02 | 30 | 2 tasks | 2 files |
 | Phase 04-card-download P01 | 18 | 2 tasks | 8 files |
 | Phase 04-card-download P02 | 2min | 2 tasks | 2 files |
-| Phase 05-visual-polish P01 | 2min | 2 tasks | 4 files |
-| Phase 05-visual-polish P02 | 2 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -82,11 +80,6 @@ Key decisions for v2.0:
 - [Phase 04-card-download]: Download button gated on isResult only — prevents capturing half-written streaming text
 - [Phase 04-card-download]: canGenerate blocks during isStreaming — prevents double-trigger mid-stream
 - [Phase 04-card-download]: ComplimentCard outer padding (p-[10px]) + border-cream-400 added during human verify — card floats with breathing room in downloaded PNG
-- [Phase 05-visual-polish]: icon-float keyframe uses only transform and opacity — no paint-triggering properties (compositor-only animation)
-- [Phase 05-visual-polish]: prefers-reduced-motion guard placed in tokens.css — single global location covers all animations
-- [Phase 05-visual-polish]: AnimatedIconBackground is aria-hidden='true' — purely decorative, not announced to screen readers
-- [Phase 05-visual-polish]: overflow-x-hidden on MainScreen outer div allows vertical scroll on short viewports while containing absolute-positioned background icons horizontally
-- [Phase 05-visual-polish]: justify-start pt-12 sm:justify-center sm:pt-0 keeps content near top on mobile so card + download button are reachable by scroll; desktop remains centered
 
 ### Pending Todos
 
@@ -99,6 +92,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T02:25:32.905Z
-Stopped at: Completed 05-02 Task 1 — awaiting human verify at http://localhost:5176
+Last session: 2026-03-14T01:14:23.747Z
+Stopped at: Completed 04-02-PLAN.md — Phase 4 Card Download complete
 Resume file: None

@@ -23,9 +23,9 @@ Requirements for v2.0 Make It Work milestone. Each maps to roadmap phases.
 
 ### Visual Polish
 
-- [x] **VIZP-01**: Animated icon background — pixelarticons scattered behind the card with color fill and gentle border pulse
-- [x] **VIZP-02**: Background respects prefers-reduced-motion (no animation if user prefers)
-- [x] **VIZP-03**: Mobile-responsive single-column layout
+- [ ] **VIZP-01**: Animated icon background — pixelarticons scattered behind the card with color fill and gentle border pulse
+- [ ] **VIZP-02**: Background respects prefers-reduced-motion (no animation if user prefers)
+- [ ] **VIZP-03**: Mobile-responsive single-column layout
 
 ## Future Requirements
 
@@ -59,9 +59,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DWNL-01 | Phase 4 | Complete |
 | DWNL-02 | Phase 4 | Complete |
 | DWNL-03 | Phase 4 | Complete |
-| VIZP-01 | Phase 5 | Complete |
-| VIZP-02 | Phase 5 | Complete |
-| VIZP-03 | Phase 5 | Complete |
+| VIZP-01 | Phase 5 | Pending |
+| VIZP-02 | Phase 5 | Pending |
+| VIZP-03 | Phase 5 | Pending |
 
 **Coverage:**
 - v2.0 requirements: 11 total
