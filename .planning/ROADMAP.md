@@ -21,7 +21,7 @@
 
 - [x] **Phase 3: AI Foundation** - Firebase project wired, name input triggers real Gemini completions with streaming, full error handling (completed 2026-03-13)
 - [x] **Phase 4: Card Download** - Compliment streams onto the card with typewriter animation; card downloads as a retina-quality PNG with correct fonts (completed 2026-03-14)
-- [ ] **Phase 5: Visual Polish** - Animated icon background, mobile-responsive layout, reduced-motion support
+- [x] **Phase 5: Visual Polish** - Animated icon background, mobile-responsive layout, reduced-motion support (completed 2026-03-14)
 
 ## Phase Details
 
@@ -65,7 +65,7 @@ Plans:
   2. On a device with prefers-reduced-motion enabled, the background icons appear static (no animation)
   3. On a mobile phone, the full generate-to-download flow works in a single scrollable column without layout overflow
   4. Background animation does not cause jank (only transform/opacity animated, no paint-triggering properties)
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 05-01-PLAN.md — AnimatedIconBackground component with custom icon-float keyframe, prefers-reduced-motion CSS guard, smoke test
@@ -81,4 +81,4 @@ Plans:
 | 2. Card Component | v1.0 | 1/1 | Complete | 2026-03-13 |
 | 3. AI Foundation | v2.0 | 2/2 | Complete | 2026-03-13 |
 | 4. Card Download | 2/2 | Complete   | 2026-03-14 | - |
-| 5. Visual Polish | 1/2 | In Progress|  | - |
+| 5. Visual Polish | 2/2 | Complete   | 2026-03-14 | - |

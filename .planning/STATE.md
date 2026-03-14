@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Make It Work
 status: executing
-stopped_at: Completed 05-01-PLAN.md — AnimatedIconBackground with icon-float keyframe and reduced-motion guard
-last_updated: "2026-03-14T02:21:38Z"
+stopped_at: "Completed 05-02 Task 1 — awaiting human verify at http://localhost:5176"
+last_updated: "2026-03-14T02:25:32.908Z"
 last_activity: "2026-03-14 — Plan 05-01 executed: AnimatedIconBackground component, icon-float keyframe, prefers-reduced-motion guard, 3 smoke tests (35 tests passing)"
 progress:
   total_phases: 3
-  completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
+  completed_phases: 3
+  total_plans: 6
+  completed_plans: 6
   percent: 83
 ---
 
@@ -55,6 +55,7 @@ Progress: [█████████░] 83% (v2.0 Phase 5)
 | Phase 04-card-download P01 | 18 | 2 tasks | 8 files |
 | Phase 04-card-download P02 | 2min | 2 tasks | 2 files |
 | Phase 05-visual-polish P01 | 2min | 2 tasks | 4 files |
+| Phase 05-visual-polish P02 | 2 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,8 @@ Key decisions for v2.0:
 - [Phase 05-visual-polish]: icon-float keyframe uses only transform and opacity — no paint-triggering properties (compositor-only animation)
 - [Phase 05-visual-polish]: prefers-reduced-motion guard placed in tokens.css — single global location covers all animations
 - [Phase 05-visual-polish]: AnimatedIconBackground is aria-hidden='true' — purely decorative, not announced to screen readers
+- [Phase 05-visual-polish]: overflow-x-hidden on MainScreen outer div allows vertical scroll on short viewports while containing absolute-positioned background icons horizontally
+- [Phase 05-visual-polish]: justify-start pt-12 sm:justify-center sm:pt-0 keeps content near top on mobile so card + download button are reachable by scroll; desktop remains centered
 
 ### Pending Todos
 
@@ -96,6 +99,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T02:21:38Z
-Stopped at: Completed 05-01-PLAN.md — AnimatedIconBackground with icon-float keyframe and reduced-motion guard
+Last session: 2026-03-14T02:25:32.905Z
+Stopped at: Completed 05-02 Task 1 — awaiting human verify at http://localhost:5176
 Resume file: None
