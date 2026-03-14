@@ -1,17 +1,21 @@
 // src/components/Card/ComplimentCard.tsx
 // Core visual artifact — styled greeting card using only DLS tokens
 // Receives name and compliment props; no hardcoded color values
+// React 19: ref is a plain prop — no forwardRef wrapper needed
 
+import type { Ref } from 'react';
 import { Icon } from '../Icon/Icon';
 
 interface ComplimentCardProps {
   name: string;
   compliment: string;
+  ref?: Ref<HTMLDivElement>; // React 19: ref as plain prop for DOM capture
 }
 
-export function ComplimentCard({ name, compliment }: ComplimentCardProps) {
+export function ComplimentCard({ name, compliment, ref }: ComplimentCardProps) {
   return (
     <div
+      ref={ref}
       className="bg-cream-50 rounded-card w-full max-w-[380px] mx-auto flex flex-col items-center text-center shadow-[0_8px_30px_rgba(90,74,111,0.12)]"
       style={{ padding: 'var(--spacing-card-pad-y) var(--spacing-card-pad-x)' }}
     >
