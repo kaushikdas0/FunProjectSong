@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://egoboost3000-a2cfc.web.app"><img src="https://img.shields.io/badge/Try_it_live-egoboost3000-E8A598?style=for-the-badge&logoColor=white" alt="Try it live" /></a>
+  <a href="https://egoboost3k.web.app"><img src="https://img.shields.io/badge/Try_it_live-egoboost3k-E8A598?style=for-the-badge&logoColor=white" alt="Try it live" /></a>
   &nbsp;
   <img src="https://img.shields.io/badge/React_19-5A4A6F?style=for-the-badge&logo=react&logoColor=white" alt="React 19" />
   <img src="https://img.shields.io/badge/Gemini_AI-7A97BE?style=for-the-badge&logo=google&logoColor=white" alt="Gemini AI" />
@@ -19,9 +19,9 @@
 ---
 
 <p align="center">
-  <img src="docs/preview.png" width="360" alt="EgoBoost 3000 — type a name, get an AI compliment, download as a card" />
+  <img src="docs/preview.png" height="480" alt="EgoBoost 3000 — type a name, get an AI compliment, download as a card" />
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="docs/tuomas_boost_card.png" width="240" alt="Example downloadable compliment card" />
+  <img src="docs/tuomas_boost_card.png" height="480" alt="Example downloadable compliment card" />
 </p>
 
 ---
@@ -34,7 +34,7 @@ That's it. One screen, one button, one smile.
 
 ## Try it
 
-**[egoboost3000-a2cfc.web.app](https://egoboost3000-a2cfc.web.app)**
+**[egoboost3k.web.app](https://egoboost3k.web.app)**
 
 ## Run it yourself
 
